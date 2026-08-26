@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kronika — Documentation that follows the source</title>
+  <meta name="description" content="Generate, audit, and reconcile repository documentation from an explicit, inspectable source boundary.">
+  <link rel="canonical" href="https://kronika.wisent.com/">
+  <meta name="theme-color" content="#10100f">
+  <meta property="og:title" content="Kronika — Documentation that follows the source">
+  <meta property="og:description" content="Source-grounded documentation generation and consistency gates for repositories.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://kronika.wisent.com/">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body class="landing-page">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header landing-header">
+    <a class="brand" href="/" aria-label="Kronika home"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4.5h14.5A3.5 3.5 0 0 1 25 8v19H10a4 4 0 0 1-4-4V5.5a1 1 0 0 1 1-1Z"/><path d="M10 27a4 4 0 0 1 4-4h11M11 10h9M11 15h7"/></svg><span>Kronika</span></a>
+    <nav aria-label="Primary navigation"><a href="#workflow">How it works</a><a href="/docs/">Documentation</a><a href="https://github.com/wisent-ai/kronika">GitHub</a></nav>
+  </header>
+  <main id="main">
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow"><span></span>Repository truth, carried forward</div>
+        <h1>Documentation that keeps pace with the code.</h1>
+        <p>Kronika generates, audits, and reconciles documentation from an explicit source boundary. See what the model reads, gate drift in CI, and keep the result in Git.</p>
+        <div class="hero-actions"><a class="button primary" href="/docs/quick-start/">Start with Kronika</a><a class="button secondary" href="https://github.com/wisent-ai/kronika">View source <span aria-hidden="true">↗</span></a></div>
+        <div class="hero-note"><span>Open source</span><span>Node.js 22+</span><span>CLI + TypeScript API</span></div>
+      </div>
+      <div class="terminal-card" aria-label="Kronika command example">
+        <div class="terminal-bar"><div><i></i><i></i><i></i></div><span>repository / documentation</span></div>
+        <pre><code><span class="muted">$</span> kronika sources --repo .
+<span class="green">Selected 24 files</span> · 118,904 bytes
+<span class="muted">Skipped 9 files with reasons</span>
+
+<span class="muted">$</span> kronika check --base origin/main
+<span class="green">Documentation passes</span>
+No public behavior is missing.
+
+<span class="muted">$</span> kronika sync --dry-run
+<span class="amber">current</span>  docs/cli.md
+<span class="amber">advanced</span> docs/configuration.md</code></pre>
+        <div class="terminal-foot"><span class="pulse"></span>No hidden source selection</div>
+      </div>
+    </section>
+
+    <section class="signal-strip" aria-label="Kronika principles">
+      <div><strong>Inspect first</strong><span>Every selected and skipped file is visible before inference.</span></div>
+      <div><strong>Fail closed</strong><span>Escaping paths, oversized diffs, and malformed answers are refused.</span></div>
+      <div><strong>Remember in Git</strong><span>Per-document baselines make every reconciliation traceable.</span></div>
+    </section>
+
+    <section class="workflow" id="workflow">
+      <div class="section-heading"><div><span class="section-number">01</span><h2>One bounded loop.</h2></div><p>Kronika separates evidence, judgment, and state so every step can be inspected and reviewed.</p></div>
+      <div class="workflow-grid">
+        <article><span class="step">A</span><h3>Select the evidence</h3><p>Git-aware discovery, secret-prone exclusions, path confinement, and byte budgets establish the exact source manifest.</p><a href="/docs/sources/">Source selection →</a></article>
+        <article><span class="step">B</span><h3>Write or audit once</h3><p>One signed Brama request generates a candidate or judges an exact Git range. Preview is the default; writes are explicit.</p><a href="/docs/cli/">CLI reference →</a></article>
+        <article><span class="step">C</span><h3>Advance the baseline</h3><p>The sync loop checks only declared evidence. Passing audits advance state; blockers become a focused rewrite brief.</p><a href="/docs/sync/">The sync loop →</a></article>
+      </div>
+    </section>
+
+    <section class="gate-section">
+      <div class="gate-copy"><span class="section-number">02</span><h2>A documentation gate with a concrete standard.</h2><p>Internal refactors do not create prose churn. Kronika blocks on omitted or contradictory public behavior, interfaces, configuration, security boundaries, and operational contracts.</p><ul><li>Audit one resolved base-to-head range</li><li>Return named blocker and warning findings</li><li>Exit non-zero for blockers or incomplete audits</li></ul><a class="text-link" href="/docs/concepts/blocker-vs-warning/">How severity works →</a></div>
+      <div class="verdict-card"><div class="verdict-title"><span>Documentation verdict</span><b>PASS</b></div><div class="diff-line"><span>base</span><code>9f2d67a</code></div><div class="diff-line"><span>head</span><code>4a8c10e</code></div><div class="verdict-rule"></div><p>The changed behavior is covered by the current documentation.</p><div class="finding-count"><span>0 blockers</span><span>1 warning</span></div></div>
+    </section>
+
+    <section class="docs-callout">
+      <div><span class="section-number">03</span><h2>From first command to unattended reconciliation.</h2><p>The documentation covers the full CLI and library surface, the evidence and trust boundaries, every sync concept, recovery paths, and captured end-to-end walkthroughs.</p></div>
+      <div class="doc-links"><a href="/docs/quick-start/"><span>Get running</span><strong>Quick start</strong><i>→</i></a><a href="/docs/cli/"><span>Look something up</span><strong>CLI reference</strong><i>→</i></a><a href="/docs/runbook/"><span>Recover safely</span><strong>Runbook</strong><i>→</i></a><a href="/docs/"><span>Read every topic</span><strong>All documentation</strong><i>→</i></a></div>
+    </section>
+
+    <section class="final-cta"><div><p class="eyebrow"><span></span>Keep the boundary visible</p><h2>Start with the files the model is allowed to see.</h2></div><a class="button primary" href="/docs/quick-start/">Read the quick start</a></section>
+  </main>
+  <footer class="site-footer"><a class="brand" href="/"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4.5h14.5A3.5 3.5 0 0 1 25 8v19H10a4 4 0 0 1-4-4V5.5a1 1 0 0 1 1-1Z"/><path d="M10 27a4 4 0 0 1 4-4h11M11 10h9M11 15h7"/></svg><span>Kronika</span></a><p>Source-grounded documentation by <a href="https://wisent.com">Wisent</a>.</p><nav aria-label="Footer navigation"><a href="/docs/">Docs</a><a href="https://github.com/wisent-ai/kronika">GitHub</a><a href="https://github.com/wisent-ai/kronika/issues">Issues</a></nav></footer>
+</body>
+</html>

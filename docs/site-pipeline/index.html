@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Site pipeline — Kronika documentation</title>
+  <meta name="description" content="Beyond single-document writing, the repository ships a documentation-site pipeline (pipeline/, the docs-cli binary): turn a product repository into its documentation site&#x27;s content, then hol">
+  <link rel="canonical" href="https://kronika.wisent.com/docs/site-pipeline/">
+  <meta name="theme-color" content="#10100f">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body class="docs-page">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header docs-header">
+    <a class="brand" href="/" aria-label="Kronika home"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4.5h14.5A3.5 3.5 0 0 1 25 8v19H10a4 4 0 0 1-4-4V5.5a1 1 0 0 1 1-1Z"/><path d="M10 27a4 4 0 0 1 4-4h11M11 10h9M11 15h7"/></svg><span>Kronika</span></a>
+    <nav aria-label="Primary navigation"><a class="selected" href="/docs/">Documentation</a><a href="https://github.com/wisent-ai/kronika">GitHub</a></nav>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="docs-sidebar">Browse docs</button>
+  </header>
+  <div class="docs-frame">
+    <aside class="docs-sidebar" id="docs-sidebar">
+      <label class="docs-filter"><span class="sr-only">Filter documentation</span><input type="search" placeholder="Filter topics" autocomplete="off" data-docs-filter></label>
+      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/">What is Kronika</a><a href="/docs/quick-start/">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/">CLI reference</a><a href="/docs/sync/">The sync loop</a><a href="/docs/runbook/">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/">Architecture</a><a href="/docs/library/">Library API</a><a href="/docs/site-pipeline/" aria-current="page" class="active">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section><section><h2>Concepts</h2><a href="/docs/concepts/source-collection/">Source collection</a><a href="/docs/concepts/check/">Check</a><a href="/docs/concepts/audit/">Audit</a><a href="/docs/concepts/finding/">Finding</a><a href="/docs/concepts/blocker-vs-warning/">Blocker vs warning</a><a href="/docs/concepts/manifest/">Sync manifest</a><a href="/docs/concepts/state/">Sync state</a><a href="/docs/concepts/baseline/">Baseline</a><a href="/docs/concepts/drift/">Drift</a></section><section><h2>Walkthroughs</h2><a href="/docs/walkthroughs/check/">Walkthrough: gating one change</a><a href="/docs/walkthroughs/sync-cycle/">Walkthrough: one full sync cycle</a><a href="/docs/examples/">Examples — kronika in practice</a></section></nav>
+      <p class="filter-empty" hidden>No matching topics.</p>
+    </aside>
+    <main id="content" class="docs-main">
+      <div class="breadcrumbs"><a href="/docs/">Docs</a><span aria-hidden="true">/</span><span>Site pipeline</span></div>
+      <article class="prose">
+        <div class="article-kicker">Kronika documentation</div>
+        <h1>Site pipeline</h1>
+        <p>Beyond single-document writing, the repository ships a documentation-site
+pipeline (<code>pipeline/</code>, the <code>docs-cli</code> binary): turn a product repository
+into its documentation site's content, then hold every page to mechanical
+checks before anything publishes. The model authors a typed content plan —
+never markup — and everything around the model is deterministic and
+verifiable. This subsystem is independent of the <code>kronika</code> CLI and
+<a href="/docs/sync/">sync loop</a>.</p>
+<h2 id="stages">Stages</h2>
+<p><code>pipeline/src/run.mjs</code> orchestrates detect → author (or load a plan) →
+validate → emit, stops at the first failing stage, and prints one final
+JSON report:</p>
+<pre><code class="language-bash">node pipeline/src/run.mjs &lt;productRepo&gt; --sources &lt;file&gt; [--plan &lt;file&gt;] [--out &lt;dir&gt;] [--model &lt;selector&gt;]
+</code></pre>
+<p>Exit codes: <code>0</code> all green, <code>1</code> a stage failed, <code>2</code> usage error, <code>69</code> model
+infrastructure down. Each stage also runs standalone via the npm scripts
+<code>docs:detect</code>, <code>docs:validate</code>, and <code>docs:emit</code>.</p>
+<h2 id="detect">Detect</h2>
+<p><code>pipeline/src/detect.mjs</code> reads the product repository's <code>docs-sources.json</code>
+— which must declare <code>product</code> and may declare <code>binary</code>, <code>routes</code>, <code>config</code>,
+<code>changelog</code>, <code>limits</code>, and a <code>docs</code> map of plain evidence documents — probes
+each declared surface, and computes <code>brief.json</code>. Detection never invents a
+surface; only declared, probed surfaces count. The completion-gate formula:</p>
+<table>
+<thead>
+<tr>
+<th>Evidence</th>
+<th>Required page kinds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>always</td>
+<td><code>overview</code></td>
+</tr>
+<tr>
+<td>CLI binary answers <code>--help</code></td>
+<td><code>quick-start</code>, <code>cli-reference</code></td>
+</tr>
+<tr>
+<td>HTTP route file readable</td>
+<td><code>api-reference</code></td>
+</tr>
+<tr>
+<td>configuration document exists</td>
+<td><code>config-reference</code></td>
+</tr>
+<tr>
+<td>CHANGELOG exists</td>
+<td><code>changelog</code>; plus <code>migration</code> iff breaking entries</td>
+</tr>
+<tr>
+<td>declared limits/quotas exist</td>
+<td><code>limits</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="author">Author</h2>
+<p>The model authors <code>plan.json</code> through Brama, conforming to the closed
+schema in <code>pipeline/schemas/plan.schema.json</code>. The authoring prompt is built
+from <code>brief.json</code>, the declared sources, and
+<code>pipeline/WRITING-STANDARD.md</code> — the injected writing standard. The endpoint
+is <code>BRAMA_URL</code> when set, otherwise the local Stado resolver's brama adapter
+(<code>http://127.0.0.1:17601</code>); there is no provider fallback, and an
+unreachable endpoint fails the run with exit <code>69</code>. <code>--plan &lt;file&gt;</code> skips
+authoring entirely and validates plus emits an existing plan without any
+model call.</p>
+<h2 id="validate">Validate</h2>
+<p><code>pipeline/src/validate.mjs</code> runs five mechanical validators; the report is
+one entry per validator with its failures, and all five must pass:</p>
+<ul>
+<li><strong>claims</strong> — every <code>claim.evidence</code> occurs in its named source.</li>
+<li><strong>drift</strong> — every documented command usage line and flag exists in the
+  live binary's <code>--help</code>. Commands are allowlisted: only the product
+  binary, only subcommand words plus <code>--help</code>/<code>--version</code>, nothing
+  shell-interpreted.</li>
+<li><strong>terms</strong> — a term used on three or more pages must be declared with a
+  defining page.</li>
+<li><strong>structure</strong> — the plan validates against the closed schema; there is no
+  page kind outside it to choose.</li>
+<li><strong>coverage</strong> — every page kind <code>brief.json</code> requires is present.</li>
+</ul>
+<p>There is no quality judge and no scoring step: the writing standard is what
+the author reads, the validators are what the build enforces.</p>
+<h2 id="emit">Emit</h2>
+<p><code>pipeline/src/emit.mjs</code> turns a validated plan into a <code>DocPage</code> data module
+— <code>docs.ts</code> in the <code>--out</code> directory — for the consuming site's
+<code>DocumentationLayout</code>, along with the navigation grouping. Publication is
+the consuming site's CI concern: deploy only on all-green.</p>
+      </article>
+      <nav class="page-turn" aria-label="Documentation pages"><a class="previous" href="/docs/library/"><small>Previous</small><span>← Library API</span></a><a class="next" href="/docs/writing-standard/"><small>Next</small><span>Kronika writing standard →</span></a></nav>
+      <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>
+    </main>
+  </div>
+</body>
+</html>

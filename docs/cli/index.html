@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CLI reference — Kronika documentation</title>
+  <meta name="description" content="One binary, four commands:">
+  <link rel="canonical" href="https://kronika.wisent.com/docs/cli/">
+  <meta name="theme-color" content="#10100f">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body class="docs-page">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header docs-header">
+    <a class="brand" href="/" aria-label="Kronika home"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4.5h14.5A3.5 3.5 0 0 1 25 8v19H10a4 4 0 0 1-4-4V5.5a1 1 0 0 1 1-1Z"/><path d="M10 27a4 4 0 0 1 4-4h11M11 10h9M11 15h7"/></svg><span>Kronika</span></a>
+    <nav aria-label="Primary navigation"><a class="selected" href="/docs/">Documentation</a><a href="https://github.com/wisent-ai/kronika">GitHub</a></nav>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="docs-sidebar">Browse docs</button>
+  </header>
+  <div class="docs-frame">
+    <aside class="docs-sidebar" id="docs-sidebar">
+      <label class="docs-filter"><span class="sr-only">Filter documentation</span><input type="search" placeholder="Filter topics" autocomplete="off" data-docs-filter></label>
+      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/">What is Kronika</a><a href="/docs/quick-start/">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/" aria-current="page" class="active">CLI reference</a><a href="/docs/sync/">The sync loop</a><a href="/docs/runbook/">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/">Architecture</a><a href="/docs/library/">Library API</a><a href="/docs/site-pipeline/">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section><section><h2>Concepts</h2><a href="/docs/concepts/source-collection/">Source collection</a><a href="/docs/concepts/check/">Check</a><a href="/docs/concepts/audit/">Audit</a><a href="/docs/concepts/finding/">Finding</a><a href="/docs/concepts/blocker-vs-warning/">Blocker vs warning</a><a href="/docs/concepts/manifest/">Sync manifest</a><a href="/docs/concepts/state/">Sync state</a><a href="/docs/concepts/baseline/">Baseline</a><a href="/docs/concepts/drift/">Drift</a></section><section><h2>Walkthroughs</h2><a href="/docs/walkthroughs/check/">Walkthrough: gating one change</a><a href="/docs/walkthroughs/sync-cycle/">Walkthrough: one full sync cycle</a><a href="/docs/examples/">Examples — kronika in practice</a></section></nav>
+      <p class="filter-empty" hidden>No matching topics.</p>
+    </aside>
+    <main id="content" class="docs-main">
+      <div class="breadcrumbs"><a href="/docs/">Docs</a><span aria-hidden="true">/</span><span>CLI reference</span></div>
+      <article class="prose">
+        <div class="article-kicker">Kronika documentation</div>
+        <h1>CLI reference</h1>
+        <p>One binary, four commands:</p>
+<pre><code class="language-text">kronika sources [options]
+kronika check --base &lt;ref&gt; [options]
+kronika write [options]
+kronika sync [options]
+</code></pre>
+<p><code>kronika</code> with no arguments, <code>help</code>, <code>-h</code>, or <code>--help</code> prints usage. An
+unknown command or option is an error. Every error is written to stderr as
+<code>kronika: &lt;message&gt;</code> with exit status <code>1</code>; the complete sentence inventory,
+with what each means, is the <a href="/docs/runbook/">runbook</a>.</p>
+<p><code>sources</code> reads no Brama configuration. <code>check</code>, <code>write</code>, and <code>sync</code> require
+<code>BRAMA_URL</code> (or <code>MODEL_ROUTER_URL</code>) and <code>BRAMA_API_KEY</code> (or
+<code>MODEL_ROUTER_TOKEN</code>) in the environment; see
+<a href="/docs/configuration/">configuration</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Exit <code>0</code></th>
+<th>Exit <code>1</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sources</code></td>
+<td>manifest printed</td>
+<td>selection refused (outside repo, symlink, missing path)</td>
+</tr>
+<tr>
+<td><code>check</code></td>
+<td>audit passed — no blockers</td>
+<td>blockers found, or any failure</td>
+</tr>
+<tr>
+<td><code>write</code></td>
+<td>preview printed / document applied</td>
+<td>any failure</td>
+</tr>
+<tr>
+<td><code>sync</code></td>
+<td>every document reconciled</td>
+<td>any <code>failed</code> outcome, or any failure</td>
+</tr>
+</tbody>
+</table>
+<h2 id="options">Options</h2>
+<p>One parser serves all commands; flags irrelevant to a command are accepted
+but unused.</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Default</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--repo &lt;path&gt;</code></td>
+<td>current directory</td>
+<td>repository root</td>
+</tr>
+<tr>
+<td><code>--output &lt;path&gt;</code></td>
+<td><code>README.md</code></td>
+<td>target document inside the repository</td>
+</tr>
+<tr>
+<td><code>--source &lt;path&gt;</code></td>
+<td>automatic discovery</td>
+<td>explicit source file or directory; repeatable</td>
+</tr>
+<tr>
+<td><code>--base &lt;ref&gt;</code></td>
+<td>—</td>
+<td>base Git commit for <code>check</code> (required there)</td>
+</tr>
+<tr>
+<td><code>--head &lt;ref&gt;</code></td>
+<td><code>HEAD</code></td>
+<td>head Git commit for <code>check</code></td>
+</tr>
+<tr>
+<td><code>--instruction &lt;text&gt;</code></td>
+<td>—</td>
+<td>additional documentation goal</td>
+</tr>
+<tr>
+<td><code>--model &lt;selector&gt;</code></td>
+<td><code>KRONIKA_MODEL</code> or <code>any</code></td>
+<td>Brama model selector</td>
+</tr>
+<tr>
+<td><code>--max-input-bytes &lt;n&gt;</code></td>
+<td><code>200000</code></td>
+<td>total source budget</td>
+</tr>
+<tr>
+<td><code>--max-file-bytes &lt;n&gt;</code></td>
+<td><code>64000</code></td>
+<td>per-file source limit</td>
+</tr>
+<tr>
+<td><code>--max-tokens &lt;n&gt;</code></td>
+<td><code>8000</code></td>
+<td>completion token budget</td>
+</tr>
+<tr>
+<td><code>--max-diff-bytes &lt;n&gt;</code></td>
+<td><code>200000</code></td>
+<td>Git diff budget for <code>check</code></td>
+</tr>
+<tr>
+<td><code>--timeout-ms &lt;n&gt;</code></td>
+<td><code>120000</code></td>
+<td>Brama request timeout</td>
+</tr>
+<tr>
+<td><code>--apply</code></td>
+<td>off</td>
+<td>atomically replace the target document (<code>write</code>)</td>
+</tr>
+<tr>
+<td><code>--manifest &lt;path&gt;</code></td>
+<td><code>kronika.sync.json</code></td>
+<td>sync manifest inside the repository</td>
+</tr>
+<tr>
+<td><code>--state &lt;path&gt;</code></td>
+<td><code>kronika.sync-state.json</code></td>
+<td>sync state file inside the repository</td>
+</tr>
+<tr>
+<td><code>--dry-run</code></td>
+<td>off</td>
+<td>sync: report and audit, but write no file and no state</td>
+</tr>
+<tr>
+<td><code>--commit</code></td>
+<td>off</td>
+<td>sync: commit rewritten documents and the state file</td>
+</tr>
+<tr>
+<td><code>--push</code></td>
+<td>off</td>
+<td>sync: push the sync commit</td>
+</tr>
+<tr>
+<td><code>--json</code></td>
+<td>off</td>
+<td>machine-readable result</td>
+</tr>
+</tbody>
+</table>
+<p>Numeric flags must be positive integers
+(<code>&lt;flag&gt; must be a positive integer</code>); a value-taking flag without a value
+is <code>&lt;flag&gt; requires a value</code>.</p>
+<h2 id="kronika-sources">kronika sources</h2>
+<p>Prints the safe source manifest without calling Brama:</p>
+<pre><code class="language-json">{
+  &quot;repo&quot;: &quot;...&quot;,
+  &quot;output&quot;: &quot;README.md&quot;,
+  &quot;totalBytes&quot;: 12345,
+  &quot;sources&quot;: [{ &quot;path&quot;: &quot;src/cli.ts&quot;, &quot;bytes&quot;: 13300 }],
+  &quot;skipped&quot;: [{ &quot;path&quot;: &quot;.env&quot;, &quot;reason&quot;: &quot;credential or generated lock file&quot; }]
+}
+</code></pre>
+<p>The collection's shape, lifecycle, and refusal sentences are in
+<a href="/docs/concepts/source-collection/">concepts/source-collection</a>; the full
+selection and exclusion rules in <a href="/docs/sources/">sources</a>. Exit <code>0</code> unless
+selection itself fails (source outside the repository, symbolic link,
+missing path).</p>
+<h2 id="kronika-check">kronika check</h2>
+<p>Audits one exact Git change against current documentation. <code>--base</code> is
+required; <code>--base</code> and <code>--head</code> are resolved to commit SHAs
+(<code>git rev-parse --verify &lt;ref&gt;^{commit}</code>) before the model call. The diff is
+taken with <code>--unified=40 --find-renames</code> over <code>base...head</code>; a diff larger
+than <code>--max-diff-bytes</code> is refused with an error rather than audited
+truncated. The model must answer with a strict JSON verdict; a malformed
+verdict, or a <code>passed</code> value that contradicts its own blocker findings, is
+an error.</p>
+<p>Text output is <code>Kronika documentation check: PASSED</code> or <code>BLOCKED</code>, the
+summary, and one line per finding. <code>--json</code> emits:</p>
+<pre><code class="language-json">{
+  &quot;passed&quot;: false,
+  &quot;summary&quot;: &quot;...&quot;,
+  &quot;findings&quot;: [
+    {
+      &quot;severity&quot;: &quot;blocker&quot;,
+      &quot;code&quot;: &quot;stable-kebab-case-code&quot;,
+      &quot;document&quot;: &quot;docs/cli.md&quot;,
+      &quot;sourcePaths&quot;: [&quot;src/cli.ts&quot;],
+      &quot;message&quot;: &quot;...&quot;,
+      &quot;requiredChange&quot;: &quot;...&quot;
+    }
+  ],
+  &quot;model&quot;: &quot;...&quot;,
+  &quot;baseSha&quot;: &quot;...&quot;,
+  &quot;headSha&quot;: &quot;...&quot;,
+  &quot;changedPaths&quot;: [&quot;src/cli.ts&quot;],
+  &quot;diffBytes&quot;: 4213,
+  &quot;sourceCount&quot;: 12,
+  &quot;skipped&quot;: []
+}
+</code></pre>
+<p>Exit <code>0</code> when the audit passes (no blockers); exit <code>1</code> when it reports a
+blocker or fails — the gate never fails open. Warnings never block. The
+audit contract itself — "never require churn merely because source
+changed" — is enforced by the system prompt in <code>src/checker.ts</code>; the
+verdict and finding vocabulary are <a href="/docs/concepts/check/">concepts/check</a>,
+<a href="/docs/concepts/audit/">concepts/audit</a>,
+<a href="/docs/concepts/finding/">concepts/finding</a>, and
+<a href="/docs/concepts/blocker-vs-warning/">concepts/blocker-vs-warning</a>. A blocked and a passing run,
+captured end to end, are in <a href="/docs/walkthroughs/check/">walkthrough-check</a>.</p>
+<h2 id="kronika-write">kronika write</h2>
+<p>Generates one complete Markdown document through Brama from the selected
+sources and <code>--instruction</code>. Without <code>--apply</code> it prints the candidate to
+stdout and changes no file. With <code>--apply</code> it atomically replaces
+<code>--output</code>: the content is written to a temporary file beside the target and
+renamed into place, preserving the existing file mode. The output path must
+stay inside the repository. Model output is normalized — a surrounding
+Markdown code fence is stripped, content under 20 characters or containing
+NUL is rejected — and always ends with a newline.</p>
+<p><code>--json</code> emits <code>outputPath</code>, <code>applied</code>, <code>model</code>, <code>sourceCount</code>, <code>skipped</code>,
+and, when not applied, the full <code>content</code>. The applied confirmation line is
+<code>Wrote &lt;path&gt; from &lt;n&gt; source files via Brama.</code></p>
+<h2 id="kronika-sync">kronika sync</h2>
+<p>Reconciles every document declared in the sync manifest with the repository:
+audits drifted ones, rewrites only audited defects, and records the
+reconciled commit. The full state machine is <a href="/docs/sync/">the sync loop</a>.</p>
+<p>Text output is one header line, <code>Kronika sync at &lt;sha12&gt;</code> (plus <code>(dry run)</code>),
+then one line per document: its action (<code>baseline</code>, <code>current</code>, <code>advanced</code>,
+<code>checked-current</code>, <code>rewritten</code>, <code>failed</code>) and detail. <code>--json</code> emits
+<code>headSha</code>, <code>dryRun</code>, <code>committed</code>, <code>stateWritten</code>, and the full <code>outcomes</code>
+array with changed paths and findings.</p>
+<p>With <code>--commit</code> (and not <code>--dry-run</code>), sync stages the rewritten documents
+plus the state file and commits with the message
+<code>kronika sync: reconcile &lt;files&gt;</code> — or
+<code>kronika sync: advance documentation baselines</code> when only baselines moved.
+<code>--push</code> then runs <code>git push</code>. Exit <code>0</code> when every document reconciled;
+exit <code>1</code> when any outcome is <code>failed</code>.</p>
+<p>One observed consequence of <code>--commit</code>: the sync commit itself moves HEAD
+past the recorded baselines, so the <em>next</em> tick reports <code>advanced</code> (a free
+baseline move over the sync commit), not <code>current</code>. Every action of the
+state machine, with output captured tick by tick, is in
+<a href="/docs/walkthroughs/sync-cycle/">walkthrough-sync-cycle</a>.</p>
+      </article>
+      <nav class="page-turn" aria-label="Documentation pages"><a class="previous" href="/docs/configuration/"><small>Previous</small><span>← Configuration</span></a><a class="next" href="/docs/sync/"><small>Next</small><span>The sync loop →</span></a></nav>
+      <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>
+    </main>
+  </div>
+</body>
+</html>

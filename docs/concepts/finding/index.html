@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Finding — Kronika documentation</title>
+  <meta name="description" content="An audit that merely said &quot;failed&quot; would leave a rewrite free to re-author everything. A finding is the unit that prevents that: one named, evidence-grounded documentation defect (or observa">
+  <link rel="canonical" href="https://kronika.wisent.com/docs/concepts/finding/">
+  <meta name="theme-color" content="#10100f">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body class="docs-page">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header docs-header">
+    <a class="brand" href="/" aria-label="Kronika home"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4.5h14.5A3.5 3.5 0 0 1 25 8v19H10a4 4 0 0 1-4-4V5.5a1 1 0 0 1 1-1Z"/><path d="M10 27a4 4 0 0 1 4-4h11M11 10h9M11 15h7"/></svg><span>Kronika</span></a>
+    <nav aria-label="Primary navigation"><a class="selected" href="/docs/">Documentation</a><a href="https://github.com/wisent-ai/kronika">GitHub</a></nav>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="docs-sidebar">Browse docs</button>
+  </header>
+  <div class="docs-frame">
+    <aside class="docs-sidebar" id="docs-sidebar">
+      <label class="docs-filter"><span class="sr-only">Filter documentation</span><input type="search" placeholder="Filter topics" autocomplete="off" data-docs-filter></label>
+      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/">What is Kronika</a><a href="/docs/quick-start/">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/">CLI reference</a><a href="/docs/sync/">The sync loop</a><a href="/docs/runbook/">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/">Architecture</a><a href="/docs/library/">Library API</a><a href="/docs/site-pipeline/">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section><section><h2>Concepts</h2><a href="/docs/concepts/source-collection/">Source collection</a><a href="/docs/concepts/check/">Check</a><a href="/docs/concepts/audit/">Audit</a><a href="/docs/concepts/finding/" aria-current="page" class="active">Finding</a><a href="/docs/concepts/blocker-vs-warning/">Blocker vs warning</a><a href="/docs/concepts/manifest/">Sync manifest</a><a href="/docs/concepts/state/">Sync state</a><a href="/docs/concepts/baseline/">Baseline</a><a href="/docs/concepts/drift/">Drift</a></section><section><h2>Walkthroughs</h2><a href="/docs/walkthroughs/check/">Walkthrough: gating one change</a><a href="/docs/walkthroughs/sync-cycle/">Walkthrough: one full sync cycle</a><a href="/docs/examples/">Examples — kronika in practice</a></section></nav>
+      <p class="filter-empty" hidden>No matching topics.</p>
+    </aside>
+    <main id="content" class="docs-main">
+      <div class="breadcrumbs"><a href="/docs/">Docs</a><span aria-hidden="true">/</span><span>Finding</span></div>
+      <article class="prose">
+        <div class="article-kicker">Kronika documentation</div>
+        <h1>Finding</h1>
+        <p>An <a href="/docs/concepts/audit/">audit</a> that merely said "failed" would leave a rewrite free to
+re-author everything. A finding is the unit that prevents that: one named,
+evidence-grounded documentation defect (or observation), specific enough to
+be corrected without touching anything else.</p>
+<h2 id="shape">Shape</h2>
+<p>Every finding in a verdict is validated field by field (<code>src/checker.ts</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>severity</code></td>
+<td><code>"blocker"</code> | <code>"warning"</code></td>
+<td>nothing else parses</td>
+</tr>
+<tr>
+<td><code>code</code></td>
+<td>string</td>
+<td>stable kebab-case, <code>^[a-z0-9]+(?:-[a-z0-9]+)*$</code></td>
+</tr>
+<tr>
+<td><code>document</code></td>
+<td>string | null</td>
+<td>repository-relative documentation path, or null when no single document owns the defect</td>
+</tr>
+<tr>
+<td><code>sourcePaths</code></td>
+<td>string[]</td>
+<td>the changed paths that ground the finding</td>
+</tr>
+<tr>
+<td><code>message</code></td>
+<td>string</td>
+<td>the specific defect; must be non-empty</td>
+</tr>
+<tr>
+<td><code>requiredChange</code></td>
+<td>string | null</td>
+<td>the specific documentation correction, or null</td>
+</tr>
+</tbody>
+</table>
+<p>A captured blocker, verbatim from <code>kronika check --json</code>:</p>
+<pre><code class="language-json">{
+  &quot;severity&quot;: &quot;blocker&quot;,
+  &quot;code&quot;: &quot;undocumented-flag&quot;,
+  &quot;document&quot;: &quot;docs/usage.md&quot;,
+  &quot;sourcePaths&quot;: [&quot;src/greet.js&quot;],
+  &quot;message&quot;: &quot;The new --shout flag changes the public CLI surface and is absent from docs/usage.md.&quot;,
+  &quot;requiredChange&quot;: &quot;Document the --shout flag: it upper-cases the greeting.&quot;
+}
+</code></pre>
+<h2 id="blocker-vs-warning">Blocker vs warning</h2>
+<p>The severity split carries the whole gating semantics — blockers fail the
+audit and become the rewrite brief; warnings print and do nothing else —
+and has its own page: <a href="/docs/concepts/blocker-vs-warning/">blocker vs warning</a>. The
+verdict-level invariant is mechanical: <code>passed</code> must equal "there are no
+blocker findings", or the whole verdict is rejected with
+<code>Kronika documentation check contradicts its blocker findings</code>.</p>
+<h2 id="what-blockers-become">What blockers become</h2>
+<p>In the <a href="/docs/sync/">sync loop</a>, a blocked audit's blockers are compiled into
+the rewrite instruction (<code>src/sync.ts</code>), one line each:</p>
+<pre><code class="language-text">- [&lt;code&gt;] &lt;message&gt; Required change: &lt;requiredChange&gt;
+</code></pre>
+<p>prefixed by the document's standing manifest instruction and the fixed
+constraint: <em>preserve the document's existing structure, voice, and correct
+content; correct exactly the audited defects below; do not re-author
+sections the audit did not name</em>. Warnings are deliberately excluded from
+the brief.</p>
+<h2 id="refusals">Refusals</h2>
+<p>A verdict with a malformed finding is rejected whole. Exact sentences, where
+<code>&lt;i&gt;</code> is the finding's index:</p>
+<ul>
+<li><code>Kronika finding &lt;i&gt; is not an object</code></li>
+<li><code>Kronika finding &lt;i&gt; has invalid severity</code></li>
+<li><code>Kronika finding &lt;i&gt; has invalid code</code></li>
+<li><code>Kronika finding &lt;i&gt; has invalid document</code></li>
+<li><code>Kronika finding &lt;i&gt; has invalid sourcePaths</code></li>
+<li><code>Kronika finding &lt;i&gt; has no message</code></li>
+<li><code>Kronika finding &lt;i&gt; has invalid requiredChange</code></li>
+</ul>
+<h2 id="not-to-be-confused-with">Not to be confused with</h2>
+<ul>
+<li><strong>The summary</strong> — the verdict's one-line narrative; findings are the
+  actionable units, and only findings drive rewrites.</li>
+<li><strong>A skipped source</strong> — a <a href="/docs/concepts/source-collection/">source-collection</a>
+  exclusion with a reason; not a documentation defect.</li>
+<li><strong>A <code>failed</code> sync outcome</strong> — an audit or rewrite that did not complete
+  (<a href="/docs/concepts/state/">state</a>); findings exist only inside completed verdicts.</li>
+</ul>
+      </article>
+      <nav class="page-turn" aria-label="Documentation pages"><a class="previous" href="/docs/concepts/audit/"><small>Previous</small><span>← Audit</span></a><a class="next" href="/docs/concepts/blocker-vs-warning/"><small>Next</small><span>Blocker vs warning →</span></a></nav>
+      <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>
+    </main>
+  </div>
+</body>
+</html>

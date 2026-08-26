@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The sync loop — Kronika documentation</title>
+  <meta name="description" content="kronika sync closes the loop the single-shot verbs leave open: check audits one change and write regenerates one document, but nothing remembered where documentation last agreed with the sou">
+  <link rel="canonical" href="https://kronika.wisent.com/docs/sync/">
+  <meta name="theme-color" content="#10100f">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body class="docs-page">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header docs-header">
+    <a class="brand" href="/" aria-label="Kronika home"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4.5h14.5A3.5 3.5 0 0 1 25 8v19H10a4 4 0 0 1-4-4V5.5a1 1 0 0 1 1-1Z"/><path d="M10 27a4 4 0 0 1 4-4h11M11 10h9M11 15h7"/></svg><span>Kronika</span></a>
+    <nav aria-label="Primary navigation"><a class="selected" href="/docs/">Documentation</a><a href="https://github.com/wisent-ai/kronika">GitHub</a></nav>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="docs-sidebar">Browse docs</button>
+  </header>
+  <div class="docs-frame">
+    <aside class="docs-sidebar" id="docs-sidebar">
+      <label class="docs-filter"><span class="sr-only">Filter documentation</span><input type="search" placeholder="Filter topics" autocomplete="off" data-docs-filter></label>
+      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/">What is Kronika</a><a href="/docs/quick-start/">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/">CLI reference</a><a href="/docs/sync/" aria-current="page" class="active">The sync loop</a><a href="/docs/runbook/">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/">Architecture</a><a href="/docs/library/">Library API</a><a href="/docs/site-pipeline/">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section><section><h2>Concepts</h2><a href="/docs/concepts/source-collection/">Source collection</a><a href="/docs/concepts/check/">Check</a><a href="/docs/concepts/audit/">Audit</a><a href="/docs/concepts/finding/">Finding</a><a href="/docs/concepts/blocker-vs-warning/">Blocker vs warning</a><a href="/docs/concepts/manifest/">Sync manifest</a><a href="/docs/concepts/state/">Sync state</a><a href="/docs/concepts/baseline/">Baseline</a><a href="/docs/concepts/drift/">Drift</a></section><section><h2>Walkthroughs</h2><a href="/docs/walkthroughs/check/">Walkthrough: gating one change</a><a href="/docs/walkthroughs/sync-cycle/">Walkthrough: one full sync cycle</a><a href="/docs/examples/">Examples — kronika in practice</a></section></nav>
+      <p class="filter-empty" hidden>No matching topics.</p>
+    </aside>
+    <main id="content" class="docs-main">
+      <div class="breadcrumbs"><a href="/docs/">Docs</a><span aria-hidden="true">/</span><span>The sync loop</span></div>
+      <article class="prose">
+        <div class="article-kicker">Kronika documentation</div>
+        <h1>The sync loop</h1>
+        <p><code>kronika sync</code> closes the loop the single-shot verbs leave open: <code>check</code>
+audits one change and <code>write</code> regenerates one document, but nothing
+remembered where documentation last agreed with the source. Sync carries
+that memory in the repository itself, in two committed files, so a scheduler
+can run it forever and each tick does only the work the evidence demands.
+Each noun has its own page — <a href="/docs/concepts/manifest/">manifest</a>,
+<a href="/docs/concepts/state/">state</a>, <a href="/docs/concepts/baseline/">baseline</a>,
+<a href="/docs/concepts/drift/">drift</a>, <a href="/docs/concepts/audit/">audit</a>,
+<a href="/docs/concepts/finding/">finding</a>,
+<a href="/docs/concepts/blocker-vs-warning/">blocker vs warning</a> — and every action
+below was captured running, tick by tick, in
+<a href="/docs/walkthroughs/sync-cycle/">walkthrough-sync-cycle</a>.</p>
+<h2 id="the-manifest-what-is-maintained">The manifest: what is maintained</h2>
+<p><code>kronika.sync.json</code> (override with <code>--manifest</code>) is the human's declaration
+of which documents are maintained from which evidence:</p>
+<pre><code class="language-json">{
+  &quot;schemaVersion&quot;: 1,
+  &quot;documents&quot;: [
+    {
+      &quot;output&quot;: &quot;docs/operations.md&quot;,
+      &quot;sources&quot;: [&quot;src/deploy&quot;, &quot;src/monitor&quot;],
+      &quot;instruction&quot;: &quot;Operator documentation; keep the existing section order.&quot;
+    }
+  ]
+}
+</code></pre>
+<p>Per document: <code>output</code> is the repository-relative documentation file;
+<code>sources</code> are the repository-relative files or directories that are its
+evidence — and also the pathspecs drift detection filters the Git diff by;
+<code>instruction</code> is a standing documentation goal passed to both the audit and
+the rewrite. Each entry may also override the run's budgets: <code>model</code>,
+<code>maxTokens</code>, <code>maxInputBytes</code>, <code>maxFileBytes</code>, <code>maxDiffBytes</code>; anything not
+overridden comes from the CLI flags (<a href="/docs/cli/">cli</a>). <code>schemaVersion</code> must be
+<code>1</code>, <code>documents</code> must be non-empty, and every entry must declare at least
+one source — a manifest that fails these checks is an error, as is a
+missing manifest.</p>
+<h2 id="the-state-what-was-reconciled">The state: what was reconciled</h2>
+<p><code>kronika.sync-state.json</code> (override with <code>--state</code>) records, per output
+path, the last commit the document was reconciled against:</p>
+<pre><code class="language-json">{
+  &quot;schemaVersion&quot;: 1,
+  &quot;documents&quot;: {
+    &quot;docs/operations.md&quot;: {
+      &quot;headSha&quot;: &quot;&lt;40-hex commit&gt;&quot;,
+      &quot;syncedAt&quot;: &quot;&lt;ISO-8601 timestamp&gt;&quot;,
+      &quot;lastAction&quot;: &quot;checked-current&quot;
+    }
+  }
+}
+</code></pre>
+<p>A missing state file means no document has a baseline yet. Invalid JSON in
+the state file is an error with one remedy: fix or delete it to re-baseline.
+The state file is meant to be committed beside the manifest — it is the
+auditable record of the loop.</p>
+<h2 id="one-tick">One tick</h2>
+<p>Sync resolves <code>HEAD</code> once, then decides per manifest document:</p>
+<table>
+<thead>
+<tr>
+<th>Evidence</th>
+<th>Action</th>
+<th>Model calls</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>no state entry</td>
+<td><code>baseline</code> — record HEAD, generate nothing</td>
+<td>none</td>
+</tr>
+<tr>
+<td>state already at HEAD</td>
+<td><code>current</code></td>
+<td>none</td>
+</tr>
+<tr>
+<td>no declared path changed since the baseline</td>
+<td><code>advanced</code> — baseline moves to HEAD</td>
+<td>none</td>
+</tr>
+<tr>
+<td>declared paths changed, audit passes</td>
+<td><code>checked-current</code> — baseline moves</td>
+<td>one <code>check</code></td>
+</tr>
+<tr>
+<td>audit finds blockers</td>
+<td><code>rewritten</code> — document regenerated, baseline moves</td>
+<td><code>check</code> + <code>write</code></td>
+</tr>
+<tr>
+<td>baseline cannot be diffed, or audit/rewrite errors</td>
+<td><code>failed</code> — baseline does not move</td>
+<td>varies</td>
+</tr>
+</tbody>
+</table>
+<p>Two deliberate choices define the loop:</p>
+<ul>
+<li><strong>Baseline before generation.</strong> A first run that rewrote every document
+  through a model would replace reviewed prose wholesale; sync maintains
+  documents from the moment they enter the manifest, so the first tick only
+  records where maintenance begins.</li>
+<li><strong>A passing audit IS the update.</strong> Drift detection diffs
+  <code>baseline...HEAD</code> restricted to the document's declared sources <em>and the
+  document itself</em> — a hand edit to the document advances its baseline
+  exactly like a source change the audit passes. The audit runs over that
+  same restricted diff, so one drifted document is never blocked by the
+  size of unrelated changes, and the checker's own contract is "never
+  require churn merely because source changed".</li>
+</ul>
+<p>When the audit does find blockers, the rewrite is not free-form: the
+document is regenerated through <code>write --apply</code> with an instruction built
+from the audit's own blocker findings — preserve the document's existing
+structure, voice, and correct content; correct exactly the audited defects;
+do not re-author sections the audit did not name.</p>
+<h2 id="failure-and-recovery">Failure and recovery</h2>
+<p>A <code>failed</code> outcome never advances the baseline, so the next tick retries the
+same range. If the recorded baseline commit no longer exists in the
+repository (rewritten history), the diff fails and the outcome says so;
+delete that document's entry from the state file to re-baseline. Audit and
+rewrite failures carry the underlying Brama or parsing error in their
+detail. Sync exits <code>1</code> when any document failed, <code>0</code> otherwise.</p>
+<h2 id="dry-run-commit-push">Dry run, commit, push</h2>
+<p><code>--dry-run</code> reports and audits but writes no file and no state — a document
+that would be rewritten is reported with its findings instead. Without
+<code>--dry-run</code>, the state file is written only when something actually
+advanced. <code>--commit</code> stages exactly the rewritten documents plus the state
+file and commits (<code>kronika sync: reconcile &lt;files&gt;</code>, or
+<code>kronika sync: advance documentation baselines</code> when only baselines moved);
+<code>--push</code> pushes that commit. This makes the loop schedulable: cron, launchd,
+or any scheduler can run <code>kronika sync --commit --push</code> unattended and
+documentation follows the repository by itself.</p>
+<p>One observed detail: the state records the HEAD the tick ran at, and the
+sync commit itself then moves HEAD by one — so the tick after a <code>--commit</code>
+reports <code>advanced</code> (a free baseline move over the sync commit), not
+<code>current</code>. <code>current</code> appears only when nothing was committed between two
+ticks.</p>
+      </article>
+      <nav class="page-turn" aria-label="Documentation pages"><a class="previous" href="/docs/cli/"><small>Previous</small><span>← CLI reference</span></a><a class="next" href="/docs/runbook/"><small>Next</small><span>Runbook →</span></a></nav>
+      <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Source selection — Kronika documentation</title>
+  <meta name="description" content="Every model call starts from an explicit, inspectable source manifest. The selection subsystem (src/sources.ts, exported as collectSources) owns discovery, exclusion, ordering, and byte budg">
+  <link rel="canonical" href="https://kronika.wisent.com/docs/sources/">
+  <meta name="theme-color" content="#10100f">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body class="docs-page">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header docs-header">
+    <a class="brand" href="/" aria-label="Kronika home"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4.5h14.5A3.5 3.5 0 0 1 25 8v19H10a4 4 0 0 1-4-4V5.5a1 1 0 0 1 1-1Z"/><path d="M10 27a4 4 0 0 1 4-4h11M11 10h9M11 15h7"/></svg><span>Kronika</span></a>
+    <nav aria-label="Primary navigation"><a class="selected" href="/docs/">Documentation</a><a href="https://github.com/wisent-ai/kronika">GitHub</a></nav>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="docs-sidebar">Browse docs</button>
+  </header>
+  <div class="docs-frame">
+    <aside class="docs-sidebar" id="docs-sidebar">
+      <label class="docs-filter"><span class="sr-only">Filter documentation</span><input type="search" placeholder="Filter topics" autocomplete="off" data-docs-filter></label>
+      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/">What is Kronika</a><a href="/docs/quick-start/">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/" aria-current="page" class="active">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/">CLI reference</a><a href="/docs/sync/">The sync loop</a><a href="/docs/runbook/">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/">Architecture</a><a href="/docs/library/">Library API</a><a href="/docs/site-pipeline/">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section><section><h2>Concepts</h2><a href="/docs/concepts/source-collection/">Source collection</a><a href="/docs/concepts/check/">Check</a><a href="/docs/concepts/audit/">Audit</a><a href="/docs/concepts/finding/">Finding</a><a href="/docs/concepts/blocker-vs-warning/">Blocker vs warning</a><a href="/docs/concepts/manifest/">Sync manifest</a><a href="/docs/concepts/state/">Sync state</a><a href="/docs/concepts/baseline/">Baseline</a><a href="/docs/concepts/drift/">Drift</a></section><section><h2>Walkthroughs</h2><a href="/docs/walkthroughs/check/">Walkthrough: gating one change</a><a href="/docs/walkthroughs/sync-cycle/">Walkthrough: one full sync cycle</a><a href="/docs/examples/">Examples — kronika in practice</a></section></nav>
+      <p class="filter-empty" hidden>No matching topics.</p>
+    </aside>
+    <main id="content" class="docs-main">
+      <div class="breadcrumbs"><a href="/docs/">Docs</a><span aria-hidden="true">/</span><span>Source selection</span></div>
+      <article class="prose">
+        <div class="article-kicker">Kronika documentation</div>
+        <h1>Source selection</h1>
+        <p>Every model call starts from an explicit, inspectable source manifest. The
+selection subsystem (<code>src/sources.ts</code>, exported as <code>collectSources</code>) owns
+discovery, exclusion, ordering, and byte budgets; <code>kronika sources</code> prints
+its result without calling Brama.</p>
+<h2 id="discovery">Discovery</h2>
+<p>Without <code>--source</code>, discovery is automatic:
+<code>git ls-files --cached --others --exclude-standard</code> lists tracked plus
+untracked-but-not-ignored files; when the path is not a Git worktree, a
+bounded recursive walk is used instead. The walk never follows symbolic
+links and never enters excluded directories.</p>
+<p>With <code>--source</code> (repeatable), only the named files and directories are
+candidates. An explicit source must exist, must lie inside the repository,
+and must not be a symbolic link — each violation is an error. Directories
+are walked with the same exclusion rules.</p>
+<h2 id="exclusions">Exclusions</h2>
+<p>Exclusions apply to every candidate, automatic or explicit, and each
+excluded file appears in <code>skipped</code> with its reason:</p>
+<ul>
+<li><strong>Directories, never entered:</strong> <code>.git</code>, <code>.next</code>, <code>.turbo</code>, <code>.vercel</code>,
+  <code>.venv</code>, <code>build</code>, <code>coverage</code>, <code>dist</code>, <code>node_modules</code>, <code>recordings</code>,
+  <code>target</code>, <code>vendor</code> — reported as "generated, dependency, recording, or
+  private deployment directory".</li>
+<li><strong>Credential and lock files:</strong> <code>.env</code> and any <code>.env.*</code>, <code>.netrc</code>,
+  <code>.npmrc</code>, <code>auth.json</code>, <code>credentials.json</code>, <code>secrets.json</code>, <code>id_rsa</code>,
+  <code>id_dsa</code>, <code>id_ed25519</code>, and lock files (<code>package-lock.json</code>, <code>yarn.lock</code>,
+  <code>pnpm-lock.yaml</code>, <code>bun.lock</code>, <code>bun.lockb</code>, <code>Cargo.lock</code>).</li>
+<li><strong>Key material:</strong> any <code>.key</code>, <code>.pem</code>, <code>.p12</code>, <code>.pfx</code> file.</li>
+</ul>
+<p>Automatic discovery additionally keeps only recognizably textual files: a
+fixed extension allowlist (<code>.ts</code>, <code>.js</code>, <code>.py</code>, <code>.rs</code>, <code>.go</code>, <code>.md</code>,
+<code>.json</code>, <code>.yaml</code>, <code>.toml</code>, <code>.sql</code>, <code>.proto</code>, and the rest of the common
+source and config extensions) plus <code>Dockerfile</code>, <code>Makefile</code>, <code>Procfile</code>,
+<code>README</code>, and <code>README.*</code>. Explicit selections skip this filter but still
+pass the exclusion, size, binary, and encoding checks below.</p>
+<h2 id="ordering">Ordering</h2>
+<p>Candidates are ranked so the budget is spent on the most relevant evidence
+first, ties broken alphabetically:</p>
+<table>
+<thead>
+<tr>
+<th>Rank</th>
+<th>Paths</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>the output document itself</td>
+</tr>
+<tr>
+<td>1</td>
+<td><code>README.md</code>, anything under <code>docs/</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>package.json</code>, <code>pyproject.toml</code>, <code>cargo.toml</code>, <code>go.mod</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>paths containing <code>config</code> or <code>schema</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>anything under <code>src/</code> or <code>app/</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>everything else</td>
+</tr>
+<tr>
+<td>6</td>
+<td>paths containing <code>test</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="budgets-and-content-checks">Budgets and content checks</h2>
+<p>Two byte budgets bound the payload, both required to be positive:</p>
+<ul>
+<li><code>--max-file-bytes</code> (default <code>64000</code>): a larger file is skipped with reason
+  <code>larger than &lt;n&gt; bytes</code>.</li>
+<li><code>--max-input-bytes</code> (default <code>200000</code>): once the running total would be
+  exceeded, further files are skipped with reason
+  <code>total source limit &lt;n&gt; bytes reached</code> — which is why ordering matters.</li>
+</ul>
+<p>Each surviving file is then read and checked: content containing a NUL byte
+is skipped as <code>binary content</code>; content that does not decode as strict UTF-8
+is skipped as <code>not valid UTF-8 text</code>; files that are empty after trimming
+are silently dropped. What remains is the manifest — path, content, and
+byte count per file, plus the total — that <a href="/docs/cli/">write and check</a> put in
+front of the model.</p>
+<h2 id="confinement">Confinement</h2>
+<p>The selection and the output are confined to one repository. A candidate
+outside the repository root is dropped; an explicit source outside it is an
+error; an <code>--output</code> that resolves outside the repository is an error in
+both the selector and the writer. The writer's atomic replacement
+(<a href="/docs/cli/">cli</a>) operates only on that confined path.</p>
+      </article>
+      <nav class="page-turn" aria-label="Documentation pages"><a class="previous" href="/docs/quick-start/"><small>Previous</small><span>← Quick start</span></a><a class="next" href="/docs/configuration/"><small>Next</small><span>Configuration →</span></a></nav>
+      <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>
+    </main>
+  </div>
+</body>
+</html>

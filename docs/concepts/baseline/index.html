@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Baseline — Kronika documentation</title>
+  <meta name="description" content="From which commit does &quot;has anything changed?&quot; get measured? The baseline: the commit SHA recorded per document in the state file, naming the last point where that document and its declared ">
+  <link rel="canonical" href="https://kronika.wisent.com/docs/concepts/baseline/">
+  <meta name="theme-color" content="#10100f">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body class="docs-page">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header docs-header">
+    <a class="brand" href="/" aria-label="Kronika home"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4.5h14.5A3.5 3.5 0 0 1 25 8v19H10a4 4 0 0 1-4-4V5.5a1 1 0 0 1 1-1Z"/><path d="M10 27a4 4 0 0 1 4-4h11M11 10h9M11 15h7"/></svg><span>Kronika</span></a>
+    <nav aria-label="Primary navigation"><a class="selected" href="/docs/">Documentation</a><a href="https://github.com/wisent-ai/kronika">GitHub</a></nav>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="docs-sidebar">Browse docs</button>
+  </header>
+  <div class="docs-frame">
+    <aside class="docs-sidebar" id="docs-sidebar">
+      <label class="docs-filter"><span class="sr-only">Filter documentation</span><input type="search" placeholder="Filter topics" autocomplete="off" data-docs-filter></label>
+      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/">What is Kronika</a><a href="/docs/quick-start/">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/">CLI reference</a><a href="/docs/sync/">The sync loop</a><a href="/docs/runbook/">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/">Architecture</a><a href="/docs/library/">Library API</a><a href="/docs/site-pipeline/">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section><section><h2>Concepts</h2><a href="/docs/concepts/source-collection/">Source collection</a><a href="/docs/concepts/check/">Check</a><a href="/docs/concepts/audit/">Audit</a><a href="/docs/concepts/finding/">Finding</a><a href="/docs/concepts/blocker-vs-warning/">Blocker vs warning</a><a href="/docs/concepts/manifest/">Sync manifest</a><a href="/docs/concepts/state/">Sync state</a><a href="/docs/concepts/baseline/" aria-current="page" class="active">Baseline</a><a href="/docs/concepts/drift/">Drift</a></section><section><h2>Walkthroughs</h2><a href="/docs/walkthroughs/check/">Walkthrough: gating one change</a><a href="/docs/walkthroughs/sync-cycle/">Walkthrough: one full sync cycle</a><a href="/docs/examples/">Examples — kronika in practice</a></section></nav>
+      <p class="filter-empty" hidden>No matching topics.</p>
+    </aside>
+    <main id="content" class="docs-main">
+      <div class="breadcrumbs"><a href="/docs/">Docs</a><span aria-hidden="true">/</span><span>Baseline</span></div>
+      <article class="prose">
+        <div class="article-kicker">Kronika documentation</div>
+        <h1>Baseline</h1>
+        <p>From which commit does "has anything changed?" get measured? The baseline:
+the commit SHA recorded per document in the <a href="/docs/concepts/state/">state file</a>, naming
+the last point where that document and its declared evidence were known to
+agree. Every sync decision is a comparison between a baseline and <code>HEAD</code>.</p>
+<h2 id="what-it-is">What it is</h2>
+<p>One <code>headSha</code> per manifest document. A tick resolves the repository's
+<code>HEAD</code> once (<code>git rev-parse --verify HEAD^{commit}</code>), then classifies each
+document by its baseline:</p>
+<table>
+<thead>
+<tr>
+<th>Baseline vs HEAD</th>
+<th>Action</th>
+<th>Model calls</th>
+<th>Baseline moves</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>no baseline</td>
+<td><code>baseline</code> — record HEAD, generate nothing</td>
+<td>none</td>
+<td>to HEAD</td>
+</tr>
+<tr>
+<td>equal to HEAD</td>
+<td><code>current</code></td>
+<td>none</td>
+<td>no (already there)</td>
+</tr>
+<tr>
+<td>behind, no <a href="/docs/concepts/drift/">drift</a></td>
+<td><code>advanced</code></td>
+<td>none</td>
+<td>to HEAD</td>
+</tr>
+<tr>
+<td>behind, drift, <a href="/docs/concepts/audit/">audit</a> passes</td>
+<td><code>checked-current</code></td>
+<td>one check</td>
+<td>to HEAD</td>
+</tr>
+<tr>
+<td>behind, drift, audit blocks</td>
+<td><code>rewritten</code> — regenerate with the findings as the brief</td>
+<td>check + write</td>
+<td>to HEAD</td>
+</tr>
+<tr>
+<td>undiffable, or audit/rewrite error</td>
+<td><code>failed</code></td>
+<td>varies</td>
+<td><strong>no</strong></td>
+</tr>
+</tbody>
+</table>
+<h2 id="baseline-before-generation">Baseline before generation</h2>
+<p>A document's first tick records where maintenance begins and touches
+nothing else. Captured verbatim:</p>
+<pre><code class="language-text">Kronika sync at 39825d883997
+  baseline        docs/usage.md — first sync records 39825d883997 as the baseline; nothing is generated on a first run
+</code></pre>
+<p>The reasoning is in <code>src/sync.ts</code> itself: a first run that rewrote every
+document through a model would replace reviewed prose wholesale; sync
+maintains documents from the moment they enter the manifest.</p>
+<h2 id="advancing-without-churn">Advancing without churn</h2>
+<p>A passing audit <em>is</em> the update — the baseline moves and no file changes.
+So does a hand edit to the document itself: the document is included in its
+own drift pathspecs precisely so that human maintenance advances the
+baseline like a passing audit. And a range in which no declared path changed
+advances with no model call at all:</p>
+<pre><code class="language-text">  advanced        docs/usage.md — no evidence path changed in the range; baseline advanced without a model call
+</code></pre>
+<p>One observed consequence of <code>--commit</code>: the state records the <code>HEAD</code> the
+tick ran at, and the sync commit itself then moves <code>HEAD</code> by one. The next
+tick therefore reports <code>advanced</code> (a free baseline move over the sync
+commit), not <code>current</code>. <code>current</code> appears when nothing was committed
+between two ticks.</p>
+<h2 id="failure-keeps-the-range">Failure keeps the range</h2>
+<p><code>failed</code> never advances the baseline, so the next tick retries the same
+<code>baseline...HEAD</code> range — an outage cannot skip a defect past the loop.
+Captured with Brama unreachable:</p>
+<pre><code class="language-text">Kronika sync at 9d577cd6dad0
+  failed          docs/usage.md — audit did not complete: fetch failed
+</code></pre>
+<p>(exit status <code>1</code>; the state file still names the previous baseline).</p>
+<h2 id="re-baselining">Re-baselining</h2>
+<p>The baseline is only as durable as the commit it names. After a history
+rewrite, the diff fails and the outcome says exactly what to do:
+<code>the recorded baseline &lt;sha12&gt; cannot be diffed against HEAD: &lt;git error&gt;.
+Delete this entry from the state file to re-baseline.</code> Deleting the entry
+(or the whole state file) costs nothing but visibility of drift since the
+old baseline; nothing is generated on re-baseline.</p>
+<h2 id="not-to-be-confused-with">Not to be confused with</h2>
+<ul>
+<li><strong><code>--base</code> of <code>kronika check</code></strong> — a one-shot argument the caller picks;
+  the baseline is the loop's own recorded equivalent, chosen by evidence.</li>
+<li><strong>The <a href="/docs/concepts/state/">state file</a></strong> — the container; the baseline is the value
+  that gives it meaning.</li>
+<li><strong>A Git branch base</strong> — baselines compare with <code>...</code> (merge-base
+  semantics) but name exact commits, not refs.</li>
+</ul>
+      </article>
+      <nav class="page-turn" aria-label="Documentation pages"><a class="previous" href="/docs/concepts/state/"><small>Previous</small><span>← Sync state</span></a><a class="next" href="/docs/concepts/drift/"><small>Next</small><span>Drift →</span></a></nav>
+      <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>
+    </main>
+  </div>
+</body>
+</html>

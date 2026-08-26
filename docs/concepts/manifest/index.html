@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sync manifest — Kronika documentation</title>
+  <meta name="description" content="Which documents does the loop maintain, and from what evidence? The sync manifest — kronika.sync.json at the repository root, overridable with --manifest — is the human&#x27;s committed declarati">
+  <link rel="canonical" href="https://kronika.wisent.com/docs/concepts/manifest/">
+  <meta name="theme-color" content="#10100f">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body class="docs-page">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header docs-header">
+    <a class="brand" href="/" aria-label="Kronika home"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4.5h14.5A3.5 3.5 0 0 1 25 8v19H10a4 4 0 0 1-4-4V5.5a1 1 0 0 1 1-1Z"/><path d="M10 27a4 4 0 0 1 4-4h11M11 10h9M11 15h7"/></svg><span>Kronika</span></a>
+    <nav aria-label="Primary navigation"><a class="selected" href="/docs/">Documentation</a><a href="https://github.com/wisent-ai/kronika">GitHub</a></nav>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="docs-sidebar">Browse docs</button>
+  </header>
+  <div class="docs-frame">
+    <aside class="docs-sidebar" id="docs-sidebar">
+      <label class="docs-filter"><span class="sr-only">Filter documentation</span><input type="search" placeholder="Filter topics" autocomplete="off" data-docs-filter></label>
+      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/">What is Kronika</a><a href="/docs/quick-start/">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/">CLI reference</a><a href="/docs/sync/">The sync loop</a><a href="/docs/runbook/">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/">Architecture</a><a href="/docs/library/">Library API</a><a href="/docs/site-pipeline/">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section><section><h2>Concepts</h2><a href="/docs/concepts/source-collection/">Source collection</a><a href="/docs/concepts/check/">Check</a><a href="/docs/concepts/audit/">Audit</a><a href="/docs/concepts/finding/">Finding</a><a href="/docs/concepts/blocker-vs-warning/">Blocker vs warning</a><a href="/docs/concepts/manifest/" aria-current="page" class="active">Sync manifest</a><a href="/docs/concepts/state/">Sync state</a><a href="/docs/concepts/baseline/">Baseline</a><a href="/docs/concepts/drift/">Drift</a></section><section><h2>Walkthroughs</h2><a href="/docs/walkthroughs/check/">Walkthrough: gating one change</a><a href="/docs/walkthroughs/sync-cycle/">Walkthrough: one full sync cycle</a><a href="/docs/examples/">Examples — kronika in practice</a></section></nav>
+      <p class="filter-empty" hidden>No matching topics.</p>
+    </aside>
+    <main id="content" class="docs-main">
+      <div class="breadcrumbs"><a href="/docs/">Docs</a><span aria-hidden="true">/</span><span>Sync manifest</span></div>
+      <article class="prose">
+        <div class="article-kicker">Kronika documentation</div>
+        <h1>Sync manifest</h1>
+        <p>Which documents does the loop maintain, and from what evidence? The sync
+manifest — <code>kronika.sync.json</code> at the repository root, overridable with
+<code>--manifest</code> — is the human's committed declaration. Nothing enters the
+<a href="/docs/sync/">sync loop</a> that is not declared here, and nothing about the
+declaration is inferred.</p>
+<h2 id="shape">Shape</h2>
+<pre><code class="language-json">{
+  &quot;schemaVersion&quot;: 1,
+  &quot;documents&quot;: [
+    {
+      &quot;output&quot;: &quot;docs/usage.md&quot;,
+      &quot;sources&quot;: [&quot;src&quot;],
+      &quot;instruction&quot;: &quot;Document every CLI flag of src/greet.js.&quot;
+    }
+  ]
+}
+</code></pre>
+<p>Per entry (<code>SyncDocument</code>, <code>src/sync.ts</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Required</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>output</code></td>
+<td>yes</td>
+<td>repository-relative documentation file this entry maintains</td>
+</tr>
+<tr>
+<td><code>sources</code></td>
+<td>yes, non-empty</td>
+<td>repository-relative files or directories that are the document's evidence — and the pathspecs <a href="/docs/concepts/drift/">drift</a> detection filters the Git diff by</td>
+</tr>
+<tr>
+<td><code>instruction</code></td>
+<td>no</td>
+<td>standing documentation goal, passed to both the audit and the rewrite</td>
+</tr>
+<tr>
+<td><code>model</code>, <code>maxTokens</code>, <code>maxInputBytes</code>, <code>maxFileBytes</code>, <code>maxDiffBytes</code></td>
+<td>no</td>
+<td>per-document overrides of the run's CLI defaults (<a href="/docs/cli/">cli</a>)</td>
+</tr>
+</tbody>
+</table>
+<p>This repository's own <code>kronika.sync.json</code> declares every page under <code>docs/</code>
+and is the reference example.</p>
+<h2 id="lifecycle">Lifecycle</h2>
+<ul>
+<li><strong>Entry added</strong> — the document's first tick records a
+  <a href="/docs/concepts/baseline/">baseline</a> and generates nothing; maintenance begins at the
+  declaration, never with a wholesale rewrite of reviewed prose.</li>
+<li><strong>Entry edited</strong> — takes effect on the next tick; sources and budgets are
+  read fresh every run. Narrowing <code>sources</code> narrows both drift detection and
+  the audited diff.</li>
+<li><strong>Entry removed</strong> — the document is simply no longer visited. Its
+  <a href="/docs/concepts/state/">state</a> entry remains as an inert record; delete it by hand if
+  you want the file minimal.</li>
+<li>The manifest is meant to be committed: it is reviewable, diffable intent.</li>
+</ul>
+<h2 id="invariants">Invariants</h2>
+<ul>
+<li>Validation is strict and total: the file must exist, parse as JSON, carry
+  <code>schemaVersion: 1</code>, declare a non-empty <code>documents</code> array, and every entry
+  must have a non-empty <code>output</code> and at least one source.</li>
+<li>The manifest never carries credentials, model endpoints, or machine state
+  — endpoints and secrets are environment (<a href="/docs/configuration/">configuration</a>),
+  progress is <a href="/docs/concepts/state/">state</a>.</li>
+<li>One manifest governs one repository; paths are repository-relative and
+  confined like every other selection
+  (<a href="/docs/concepts/source-collection/">source-collection</a>).</li>
+</ul>
+<h2 id="refusals">Refusals</h2>
+<p>Exact sentences from <code>loadSyncManifest</code> (<code>src/sync.ts</code>), all fatal before
+any document is visited:</p>
+<ul>
+<li><code>Sync manifest is missing: &lt;path&gt;. Declare the maintained documents first.</code></li>
+<li><code>Sync manifest is not valid JSON: &lt;path&gt;</code></li>
+<li><code>Unsupported sync manifest schemaVersion in &lt;path&gt;</code></li>
+<li><code>Sync manifest declares no documents: &lt;path&gt;</code></li>
+<li><code>Sync manifest entry without an output path in &lt;path&gt;</code></li>
+<li><code>Sync manifest entry &lt;output&gt; declares no sources</code></li>
+</ul>
+<h2 id="not-to-be-confused-with">Not to be confused with</h2>
+<ul>
+<li><strong>The <a href="/docs/concepts/state/">state file</a></strong> — the loop's memory of what was reconciled;
+  the manifest is intent, the state is progress. Manifest edits are human;
+  state writes are Kronika's.</li>
+<li><strong>The <a href="/docs/concepts/source-collection/">source collection</a></strong> — what one call actually
+  read; the manifest's <code>sources</code> bound it but budgets and exclusions still
+  apply.</li>
+<li><strong>The site pipeline's <code>docs-sources.json</code></strong> — a different file for a
+  different subsystem (<a href="/docs/site-pipeline/">site-pipeline</a>).</li>
+</ul>
+      </article>
+      <nav class="page-turn" aria-label="Documentation pages"><a class="previous" href="/docs/concepts/blocker-vs-warning/"><small>Previous</small><span>← Blocker vs warning</span></a><a class="next" href="/docs/concepts/state/"><small>Next</small><span>Sync state →</span></a></nav>
+      <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>
+    </main>
+  </div>
+</body>
+</html>

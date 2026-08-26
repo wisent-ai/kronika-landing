@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quick start — Kronika documentation</title>
+  <meta name="description" content="How do you go from a clone to a reconciled document? This page is the one happy path: build the CLI, inspect the evidence boundary without any model call, configure Brama, audit one change, ">
+  <link rel="canonical" href="https://kronika.wisent.com/docs/quick-start/">
+  <meta name="theme-color" content="#10100f">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body class="docs-page">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header docs-header">
+    <a class="brand" href="/" aria-label="Kronika home"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4.5h14.5A3.5 3.5 0 0 1 25 8v19H10a4 4 0 0 1-4-4V5.5a1 1 0 0 1 1-1Z"/><path d="M10 27a4 4 0 0 1 4-4h11M11 10h9M11 15h7"/></svg><span>Kronika</span></a>
+    <nav aria-label="Primary navigation"><a class="selected" href="/docs/">Documentation</a><a href="https://github.com/wisent-ai/kronika">GitHub</a></nav>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="docs-sidebar">Browse docs</button>
+  </header>
+  <div class="docs-frame">
+    <aside class="docs-sidebar" id="docs-sidebar">
+      <label class="docs-filter"><span class="sr-only">Filter documentation</span><input type="search" placeholder="Filter topics" autocomplete="off" data-docs-filter></label>
+      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/">What is Kronika</a><a href="/docs/quick-start/" aria-current="page" class="active">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/">CLI reference</a><a href="/docs/sync/">The sync loop</a><a href="/docs/runbook/">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/">Architecture</a><a href="/docs/library/">Library API</a><a href="/docs/site-pipeline/">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section><section><h2>Concepts</h2><a href="/docs/concepts/source-collection/">Source collection</a><a href="/docs/concepts/check/">Check</a><a href="/docs/concepts/audit/">Audit</a><a href="/docs/concepts/finding/">Finding</a><a href="/docs/concepts/blocker-vs-warning/">Blocker vs warning</a><a href="/docs/concepts/manifest/">Sync manifest</a><a href="/docs/concepts/state/">Sync state</a><a href="/docs/concepts/baseline/">Baseline</a><a href="/docs/concepts/drift/">Drift</a></section><section><h2>Walkthroughs</h2><a href="/docs/walkthroughs/check/">Walkthrough: gating one change</a><a href="/docs/walkthroughs/sync-cycle/">Walkthrough: one full sync cycle</a><a href="/docs/examples/">Examples — kronika in practice</a></section></nav>
+      <p class="filter-empty" hidden>No matching topics.</p>
+    </aside>
+    <main id="content" class="docs-main">
+      <div class="breadcrumbs"><a href="/docs/">Docs</a><span aria-hidden="true">/</span><span>Quick start</span></div>
+      <article class="prose">
+        <div class="article-kicker">Kronika documentation</div>
+        <h1>Quick start</h1>
+        <p>How do you go from a clone to a reconciled document? This page is the one
+happy path: build the CLI, inspect the evidence boundary without any model
+call, configure Brama, audit one change, preview one document, and turn on
+the sync loop. Everything else — the full flag surface, the selection rules,
+the loop's exact state machine — lives in <a href="/docs/cli/">cli</a>,
+<a href="/docs/sources/">sources</a>, and <a href="/docs/sync/">sync</a>.</p>
+<h2 id="build-the-cli">Build the CLI</h2>
+<p>Prerequisites: Git, Node.js 22 or newer, npm.</p>
+<pre><code class="language-bash">git clone https://github.com/wisent-ai/kronika.git
+cd kronika
+npm install
+npm run build
+npm link
+</code></pre>
+<p><code>npm run build</code> compiles TypeScript into <code>dist/</code>; the <code>kronika</code> binary is
+<code>dist/src/cli.js</code>. <code>npm link</code> puts <code>kronika</code> on your PATH; without it, run
+<code>node dist/src/cli.js</code> directly. The package has no runtime dependencies.</p>
+<h2 id="inspect-the-evidence-boundary">Inspect the evidence boundary</h2>
+<pre><code class="language-bash">kronika sources --repo /path/to/project
+</code></pre>
+<p>This makes no model request and changes no file — it needs no Brama
+configuration at all. It prints JSON: the selected files with byte counts,
+the total, and every skipped file with its reason. Captured against a toy
+repository (paths and counts will differ):</p>
+<pre><code class="language-json">{
+  &quot;repo&quot;: &quot;/private/tmp/kronika-docs.OnmsmX/toy&quot;,
+  &quot;output&quot;: &quot;README.md&quot;,
+  &quot;totalBytes&quot;: 442,
+  &quot;sources&quot;: [
+    { &quot;path&quot;: &quot;README.md&quot;, &quot;bytes&quot;: 87 },
+    { &quot;path&quot;: &quot;docs/usage.md&quot;, &quot;bytes&quot;: 80 },
+    { &quot;path&quot;: &quot;src/greet.js&quot;, &quot;bytes&quot;: 93 },
+    { &quot;path&quot;: &quot;kronika.sync.json&quot;, &quot;bytes&quot;: 182 }
+  ],
+  &quot;skipped&quot;: [
+    { &quot;path&quot;: &quot;credentials.json&quot;, &quot;reason&quot;: &quot;credential or generated lock file&quot; }
+  ]
+}
+</code></pre>
+<p>Add <code>--source &lt;path&gt;</code> (repeatable) to select explicit files or directories
+instead of automatic discovery. Review this boundary before configuring
+Brama: it is exactly what the model will see.</p>
+<h2 id="configure-brama">Configure Brama</h2>
+<pre><code class="language-bash">export BRAMA_URL=&lt;your-brama-origin&gt;
+export BRAMA_API_KEY=&lt;scoped-bearer&gt;
+# Optional request signing; set both or neither:
+export WISENT_APP_AGENT_ID=&lt;agent-id&gt;
+export WISENT_APP_AGENT_AUTH_SECRET=&lt;signing-secret&gt;
+export KRONIKA_MODEL=any
+</code></pre>
+<p><code>BRAMA_URL</code> and <code>BRAMA_API_KEY</code> are required for <code>check</code>, <code>write</code>, and
+<code>sync</code> (<code>MODEL_ROUTER_URL</code> and <code>MODEL_ROUTER_TOKEN</code> are accepted aliases).
+The agent ID and HMAC secret must be supplied together or not at all.
+<code>KRONIKA_MODEL</code> sets the default <code>--model</code> selector; unset, it is <code>any</code>.
+See <a href="/docs/configuration/">configuration</a>.</p>
+<h2 id="audit-one-change">Audit one change</h2>
+<pre><code class="language-bash">kronika check --repo /path/to/project --base origin/main --json
+</code></pre>
+<p><code>check</code> resolves <code>--base</code> and <code>--head</code> (default <code>HEAD</code>) to commit SHAs,
+sends the bounded Git diff plus current sources to Brama, and prints a
+structured verdict. Exit <code>0</code> means the documentation already covers the
+change; exit <code>1</code> means at least one blocker finding names a concrete defect
+— captured blocked and passing runs are in
+<a href="/docs/walkthroughs/check/">walkthrough-check</a>.</p>
+<h2 id="preview-one-document">Preview one document</h2>
+<pre><code class="language-bash">kronika write \
+  --repo /path/to/project \
+  --output docs/architecture.md \
+  --source README.md --source src \
+  --instruction 'Document components, request flow, invariants, and failure modes.'
+</code></pre>
+<p>Without <code>--apply</code>, <code>write</code> prints the generated Markdown to stdout and
+changes nothing. Add <code>--apply</code> only after reviewing the preview: it
+atomically replaces the output file, which must stay inside the repository.</p>
+<h2 id="turn-on-the-sync-loop">Turn on the sync loop</h2>
+<p>Declare the maintained documents in <code>kronika.sync.json</code> at the repository
+root:</p>
+<pre><code class="language-json">{
+  &quot;schemaVersion&quot;: 1,
+  &quot;documents&quot;: [
+    {
+      &quot;output&quot;: &quot;docs/architecture.md&quot;,
+      &quot;sources&quot;: [&quot;src&quot;, &quot;README.md&quot;],
+      &quot;instruction&quot;: &quot;Keep the existing section order.&quot;
+    }
+  ]
+}
+</code></pre>
+<p>Then run:</p>
+<pre><code class="language-bash">kronika sync --repo /path/to/project --commit --push
+</code></pre>
+<p>The first run for each document records the current commit as its baseline
+and generates nothing — captured verbatim:</p>
+<pre><code class="language-console">$ kronika sync --commit
+Kronika sync at 39825d883997
+  baseline        docs/usage.md — first sync records 39825d883997 as the baseline; nothing is generated on a first run
+  committed
+</code></pre>
+<p>Every later run audits only documents whose declared sources changed,
+rewrites only documents whose audit found blockers, and records the
+reconciled commit in <code>kronika.sync-state.json</code>. <code>--dry-run</code> reports without
+writing anything. Exit <code>1</code> means at least one document failed to reconcile.
+The full state machine is <a href="/docs/sync/">the sync loop</a>; every action, captured
+tick by tick, is <a href="/docs/walkthroughs/sync-cycle/">walkthrough-sync-cycle</a>.</p>
+      </article>
+      <nav class="page-turn" aria-label="Documentation pages"><a class="previous" href="/docs/"><small>Previous</small><span>← What is Kronika</span></a><a class="next" href="/docs/sources/"><small>Next</small><span>Source selection →</span></a></nav>
+      <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>
+    </main>
+  </div>
+</body>
+</html>

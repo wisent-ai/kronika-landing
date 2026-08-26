@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Walkthrough: one full sync cycle — Kronika documentation</title>
+  <meta name="description" content="What does the loop actually print, write, and commit, tick by tick? This page runs kronika sync through every action of its state machine against a toy repository, with output pasted verbati">
+  <link rel="canonical" href="https://kronika.wisent.com/docs/walkthroughs/sync-cycle/">
+  <meta name="theme-color" content="#10100f">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body class="docs-page">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header docs-header">
+    <a class="brand" href="/" aria-label="Kronika home"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4.5h14.5A3.5 3.5 0 0 1 25 8v19H10a4 4 0 0 1-4-4V5.5a1 1 0 0 1 1-1Z"/><path d="M10 27a4 4 0 0 1 4-4h11M11 10h9M11 15h7"/></svg><span>Kronika</span></a>
+    <nav aria-label="Primary navigation"><a class="selected" href="/docs/">Documentation</a><a href="https://github.com/wisent-ai/kronika">GitHub</a></nav>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="docs-sidebar">Browse docs</button>
+  </header>
+  <div class="docs-frame">
+    <aside class="docs-sidebar" id="docs-sidebar">
+      <label class="docs-filter"><span class="sr-only">Filter documentation</span><input type="search" placeholder="Filter topics" autocomplete="off" data-docs-filter></label>
+      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/">What is Kronika</a><a href="/docs/quick-start/">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/">CLI reference</a><a href="/docs/sync/">The sync loop</a><a href="/docs/runbook/">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/">Architecture</a><a href="/docs/library/">Library API</a><a href="/docs/site-pipeline/">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section><section><h2>Concepts</h2><a href="/docs/concepts/source-collection/">Source collection</a><a href="/docs/concepts/check/">Check</a><a href="/docs/concepts/audit/">Audit</a><a href="/docs/concepts/finding/">Finding</a><a href="/docs/concepts/blocker-vs-warning/">Blocker vs warning</a><a href="/docs/concepts/manifest/">Sync manifest</a><a href="/docs/concepts/state/">Sync state</a><a href="/docs/concepts/baseline/">Baseline</a><a href="/docs/concepts/drift/">Drift</a></section><section><h2>Walkthroughs</h2><a href="/docs/walkthroughs/check/">Walkthrough: gating one change</a><a href="/docs/walkthroughs/sync-cycle/" aria-current="page" class="active">Walkthrough: one full sync cycle</a><a href="/docs/examples/">Examples — kronika in practice</a></section></nav>
+      <p class="filter-empty" hidden>No matching topics.</p>
+    </aside>
+    <main id="content" class="docs-main">
+      <div class="breadcrumbs"><a href="/docs/">Docs</a><span aria-hidden="true">/</span><span>Walkthrough: one full sync cycle</span></div>
+      <article class="prose">
+        <div class="article-kicker">Kronika documentation</div>
+        <h1>Walkthrough: one full sync cycle</h1>
+        <p>What does the loop actually print, write, and commit, tick by tick? This
+page runs <code>kronika sync</code> through every action of its state machine against
+a toy repository, with output pasted verbatim. The state machine itself is
+<a href="/docs/sync/">sync</a>; the nouns are <a href="/docs/concepts/manifest/">manifest</a>,
+<a href="/docs/concepts/state/">state</a>, <a href="/docs/concepts/baseline/">baseline</a>,
+<a href="/docs/concepts/drift/">drift</a>.</p>
+<p><strong>How this was captured.</strong> The built CLI (<code>npm run build</code>, Node 22) ran
+against a scratch repository under <code>/tmp</code>. Brama needs real credentials, so
+no real model was called: ticks that need no model ran with placeholder
+credentials pointing at a closed local port (<code>BRAMA_URL=http://127.0.0.1:4899</code>,
+<code>BRAMA_API_KEY=placeholder-not-a-secret</code>) — the product's own offline path —
+and the two model-dependent ticks ran against a local stub on
+<code>127.0.0.1:4891</code> answering <code>/v1/chat/completions</code> with scripted verdicts.
+Framing, parsing, validation, atomic writes, and Git behavior are Kronika's
+real code paths; only the verdict prose is canned, and it is marked below.</p>
+<h2 id="the-toy-repository">The toy repository</h2>
+<pre><code class="language-text">toy/
+  README.md            # not declared as evidence
+  src/greet.js         # prints &quot;Hello, &lt;name&gt;!&quot;
+  docs/usage.md        # the maintained document
+  kronika.sync.json
+</code></pre>
+<pre><code class="language-json">{
+  &quot;schemaVersion&quot;: 1,
+  &quot;documents&quot;: [
+    {
+      &quot;output&quot;: &quot;docs/usage.md&quot;,
+      &quot;sources&quot;: [&quot;src&quot;],
+      &quot;instruction&quot;: &quot;Document every CLI flag of src/greet.js.&quot;
+    }
+  ]
+}
+</code></pre>
+<h2 id="tick-1-baseline-no-model-call">Tick 1 — baseline (no model call)</h2>
+<pre><code class="language-console">$ kronika sync --commit
+Kronika sync at 39825d883997
+  baseline        docs/usage.md — first sync records 39825d883997 as the baseline; nothing is generated on a first run
+  committed
+</code></pre>
+<p>Exit <code>0</code>. Offline credentials sufficed: a first run makes no model call.
+<code>kronika.sync-state.json</code> now exists and <code>--commit</code> landed it as
+<code>kronika sync: advance documentation baselines</code>:</p>
+<pre><code class="language-json">{
+  &quot;schemaVersion&quot;: 1,
+  &quot;documents&quot;: {
+    &quot;docs/usage.md&quot;: {
+      &quot;headSha&quot;: &quot;39825d883997f79f823e7d9be4a24d3f0ea77321&quot;,
+      &quot;syncedAt&quot;: &quot;2026-08-24T22:03:29.990Z&quot;,
+      &quot;lastAction&quot;: &quot;baseline&quot;
+    }
+  }
+}
+</code></pre>
+<h2 id="tick-2-the-sync-commit-moves-head">Tick 2 — the sync commit moves HEAD</h2>
+<pre><code class="language-console">$ kronika sync
+Kronika sync at 6d6a223d5b73
+  advanced        docs/usage.md — no evidence path changed in the range; baseline advanced without a model call
+</code></pre>
+<p>Not <code>current</code>: the state recorded the HEAD the tick ran at, and tick 1's own
+commit then moved HEAD by one. The range contains only the sync commit — no
+declared path changed — so the baseline advances for free. <code>current</code> appears
+when no commit lands between two ticks (tick 8 below).</p>
+<h2 id="tick-3-undeclared-change-no-model-call">Tick 3 — undeclared change (no model call)</h2>
+<p>Edit <code>README.md</code>, which the manifest does not declare, and commit:</p>
+<pre><code class="language-console">$ kronika sync --commit
+Kronika sync at 99202b121a20
+  advanced        docs/usage.md — no evidence path changed in the range; baseline advanced without a model call
+  committed
+</code></pre>
+<h2 id="tick-4-drift-while-brama-is-unreachable">Tick 4 — drift while Brama is unreachable</h2>
+<p><code>src/greet.js</code> gains a <code>--shout</code> flag (a public-surface change) and is
+committed. Now the audit is required, and the offline credentials show the
+failure posture:</p>
+<pre><code class="language-console">$ kronika sync
+Kronika sync at 9d577cd6dad0
+  failed          docs/usage.md — audit did not complete: fetch failed
+</code></pre>
+<p>Exit <code>1</code>, and the state file still names the tick-3 baseline: a <code>failed</code>
+outcome never advances, so the next tick retries the same range
+(<a href="/docs/runbook/">runbook</a>).</p>
+<h2 id="tick-5-dry-run-of-the-blocked-audit-stub-verdict">Tick 5 — dry run of the blocked audit (stub verdict)</h2>
+<p>With the stub answering the audit — <code>passed: false</code>, one blocker
+<code>undocumented-flag</code> naming the missing <code>--shout</code> documentation:</p>
+<pre><code class="language-console">$ kronika sync --dry-run
+Kronika sync at 9d577cd6dad0 (dry run)
+  rewritten       docs/usage.md — dry run: audit found blockers and a rewrite would be applied. src/greet.js adds a --shout flag that docs/usage.md does not mention.
+</code></pre>
+<p>Exit <code>0</code>; no file and no state written. <code>--dry-run --json</code> carries the full
+findings array for review.</p>
+<h2 id="tick-6-rewrite-commit-stub-verdict-and-stub-rewrite">Tick 6 — rewrite, commit (stub verdict and stub rewrite)</h2>
+<pre><code class="language-console">$ kronika sync --commit
+Kronika sync at 9d577cd6dad0
+  rewritten       docs/usage.md — audit found blockers; the document was regenerated with the findings as the correction brief. src/greet.js adds a --shout flag that docs/usage.md does not mention.
+  committed
+</code></pre>
+<p>The rewrite was instructed with the blocker itself
+(<code>- [undocumented-flag] … Required change: Document the --shout flag …</code>)
+plus the standing manifest instruction — correct exactly the audited
+defects, do not re-author unnamed sections. The commit stages exactly the
+document and the state:</p>
+<pre><code class="language-console">$ git show --stat --format=%s HEAD
+kronika sync: reconcile docs/usage.md
+
+ docs/usage.md           | 5 +++--
+ kronika.sync-state.json | 6 +++---
+ 2 files changed, 6 insertions(+), 5 deletions(-)
+</code></pre>
+<p><code>docs/usage.md</code> now documents <code>--shout</code> (stub prose), and the state entry
+reads <code>"lastAction": "rewritten"</code> at the audited HEAD.</p>
+<h2 id="tick-7-a-change-the-audit-waves-through">Tick 7 — a change the audit waves through</h2>
+<p>A comment-only edit to <code>src/greet.js</code> is drift (a declared path changed),
+so one check runs; the stub verdict passes, and the pass IS the update:</p>
+<pre><code class="language-console">$ kronika sync
+Kronika sync at 1d5ccd2b41d0
+  checked-current docs/usage.md — audit passed: docs/usage.md already documents the changed greeting behavior; no public surface is missing.
+</code></pre>
+<p>No file changed; the baseline moved.</p>
+<h2 id="tick-8-current">Tick 8 — current</h2>
+<p>Run again with nothing committed in between:</p>
+<pre><code class="language-console">$ kronika sync
+Kronika sync at 1d5ccd2b41d0
+  current         docs/usage.md — already reconciled against HEAD
+</code></pre>
+<h2 id="what-the-cycle-demonstrates">What the cycle demonstrates</h2>
+<table>
+<thead>
+<tr>
+<th>Tick</th>
+<th>Action</th>
+<th>Model calls</th>
+<th>Exit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>baseline</code></td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>2, 3</td>
+<td><code>advanced</code></td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>failed</code> (offline)</td>
+<td>attempted 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>rewritten</code> (dry run)</td>
+<td>1 check</td>
+<td>0</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>rewritten</code> + commit</td>
+<td>check + write</td>
+<td>0</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>checked-current</code></td>
+<td>1 check</td>
+<td>0</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>current</code></td>
+<td>0</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>Unattended operation is the same loop with <code>--commit --push</code> on a schedule
+(<a href="https://github.com/wisent-ai/kronika/blob/main/docs/examples/sync-forever.sh">examples/sync-forever.sh</a>); the one-shot gate is
+<a href="/docs/walkthroughs/check/">walkthrough-check</a>.</p>
+      </article>
+      <nav class="page-turn" aria-label="Documentation pages"><a class="previous" href="/docs/walkthroughs/check/"><small>Previous</small><span>← Walkthrough: gating one change</span></a><a class="next" href="/docs/examples/"><small>Next</small><span>Examples — kronika in practice →</span></a></nav>
+      <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>
+    </main>
+  </div>
+</body>
+</html>

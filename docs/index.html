@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>What is Kronika — Kronika documentation</title>
+  <meta name="description" content="Kronika is Wisent&#x27;s source-grounded documentation writer and documentation-consistency gate. It generates and audits repository documentation through Brama, treating the repository itself as">
+  <link rel="canonical" href="https://kronika.wisent.com/docs/">
+  <meta name="theme-color" content="#10100f">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body class="docs-page">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header docs-header">
+    <a class="brand" href="/" aria-label="Kronika home"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4.5h14.5A3.5 3.5 0 0 1 25 8v19H10a4 4 0 0 1-4-4V5.5a1 1 0 0 1 1-1Z"/><path d="M10 27a4 4 0 0 1 4-4h11M11 10h9M11 15h7"/></svg><span>Kronika</span></a>
+    <nav aria-label="Primary navigation"><a class="selected" href="/docs/">Documentation</a><a href="https://github.com/wisent-ai/kronika">GitHub</a></nav>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="docs-sidebar">Browse docs</button>
+  </header>
+  <div class="docs-frame">
+    <aside class="docs-sidebar" id="docs-sidebar">
+      <label class="docs-filter"><span class="sr-only">Filter documentation</span><input type="search" placeholder="Filter topics" autocomplete="off" data-docs-filter></label>
+      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/" aria-current="page" class="active">What is Kronika</a><a href="/docs/quick-start/">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/">CLI reference</a><a href="/docs/sync/">The sync loop</a><a href="/docs/runbook/">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/">Architecture</a><a href="/docs/library/">Library API</a><a href="/docs/site-pipeline/">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section><section><h2>Concepts</h2><a href="/docs/concepts/source-collection/">Source collection</a><a href="/docs/concepts/check/">Check</a><a href="/docs/concepts/audit/">Audit</a><a href="/docs/concepts/finding/">Finding</a><a href="/docs/concepts/blocker-vs-warning/">Blocker vs warning</a><a href="/docs/concepts/manifest/">Sync manifest</a><a href="/docs/concepts/state/">Sync state</a><a href="/docs/concepts/baseline/">Baseline</a><a href="/docs/concepts/drift/">Drift</a></section><section><h2>Walkthroughs</h2><a href="/docs/walkthroughs/check/">Walkthrough: gating one change</a><a href="/docs/walkthroughs/sync-cycle/">Walkthrough: one full sync cycle</a><a href="/docs/examples/">Examples — kronika in practice</a></section></nav>
+      <p class="filter-empty" hidden>No matching topics.</p>
+    </aside>
+    <main id="content" class="docs-main">
+      <div class="breadcrumbs"><a href="/docs/">Docs</a></div>
+      <article class="prose">
+        <div class="article-kicker">Kronika documentation</div>
+        <h1>What is Kronika</h1>
+        <p>Kronika is Wisent's source-grounded documentation writer and
+documentation-consistency gate. It generates and audits repository
+documentation through Brama, treating the repository itself as the only
+admissible evidence. The whole product is three moving parts: an evidence
+boundary that selects what the model may see, one bounded Brama call that
+writes or judges, and a sync loop that remembers where documentation and
+source last agreed.</p>
+<h2 id="the-evidence-boundary-selects">The evidence boundary selects</h2>
+<p>Before any model call, Kronika builds an explicit source manifest. Discovery
+is Git-aware — <code>git ls-files --cached --others --exclude-standard</code> — with a
+bounded recursive walk when the path is not a Git worktree. Secret-prone
+files are excluded by name and extension (<code>.env*</code>, lock files, private keys,
+<code>credentials.json</code>), and generated or dependency directories (<code>node_modules</code>,
+<code>dist</code>, <code>build</code>, <code>.git</code>, <code>vendor</code>, <code>target</code>) are never entered. Every
+selection is confined to the repository: an explicit <code>--source</code> outside the
+repository, a symbolic link, or an output path escaping the repository is an
+error, not a warning. Payloads are bounded by a per-file and a total byte
+budget, and every skipped file is reported with its reason. <code>kronika sources</code>
+prints this manifest without calling Brama at all — the boundary is
+inspectable before it is used. Details: <a href="/docs/sources/">source selection</a>.</p>
+<h2 id="one-brama-call-writes-or-judges">One Brama call writes or judges</h2>
+<p>Everything the model does is one signed, OpenAI-compatible chat completion
+against <code>BRAMA_URL</code>. In <code>write</code> mode the prompt carries the selected sources
+and a documentation instruction; the system prompt forbids inventing
+commands, endpoints, configuration keys, or guarantees, and treats repository
+content as untrusted reference data, never as instructions. The result is
+previewed on stdout by default; only explicit <code>--apply</code> replaces the target
+document, atomically, inside the repository. In <code>check</code> mode the prompt
+carries one exact Git range (<code>--base</code>...<code>--head</code>, resolved to commit SHAs)
+plus current sources, and the model must return a strict JSON verdict:
+<code>passed</code>, a summary, and blocker or warning findings. A blocker is a concrete
+public-behavior defect the change causes or exposes; internal refactors never
+require documentation churn. <code>check</code> exits non-zero on any blocker, so it can
+gate CI. Details: <a href="/docs/cli/">cli</a>, <a href="/docs/configuration/">configuration</a>.</p>
+<h2 id="sync-remembers">Sync remembers</h2>
+<p><code>check</code> audits one change and <code>write</code> regenerates one document, but neither
+remembers where documentation last agreed with the source. <code>kronika sync</code>
+carries that memory in the repository itself: <code>kronika.sync.json</code> is the
+human's declaration of which documents are maintained from which evidence,
+and <code>kronika.sync-state.json</code> records the last commit each document was
+reconciled against. Each run does only the work the evidence demands — a
+document's first run records a baseline and generates nothing; an unchanged
+document advances without a model call; a drifted document is audited over a
+diff restricted to its own declared sources, and a passing audit IS the
+update. Only an audit with blocker findings triggers a rewrite, instructed
+with those findings so it corrects named defects instead of re-authoring
+reviewed text. <code>--commit</code> and <code>--push</code> land the reconciliation, so a
+scheduler can run the same command forever. Details: <a href="/docs/sync/">the sync loop</a>.</p>
+<h2 id="what-kronika-is-not">What Kronika is not</h2>
+<p>Kronika does not prove generated prose correct merely because source was
+supplied; a maintainer must review claims and omissions. It does not execute
+repository instructions, build scripts, or generated output. It holds no
+hosted database — output and history stay in the repository and its Git log.
+It does not schedule repositories, publish a site, or manage credentials:
+Brama owns client authorization, model selection, and inference, and the
+bearer plus optional HMAC identity are runtime secrets that never enter
+source or output. The repository also ships a separate documentation-site
+pipeline (<code>docs-cli</code>) that authors a typed content plan and gates it with
+mechanical validators; that is a distinct subsystem, described in
+<a href="/docs/site-pipeline/">site-pipeline</a>.</p>
+<h2 id="the-first-three-commands">The first three commands</h2>
+<pre><code class="language-bash">kronika sources
+</code></pre>
+<p>The evidence boundary for the current repository: every selected file, the
+byte total, and every skipped file with its reason. No Brama call.</p>
+<pre><code class="language-bash">kronika check --base origin/main
+</code></pre>
+<p>Audit the exact change from <code>origin/main</code> to <code>HEAD</code> against current
+documentation. Exit <code>1</code> means at least one concrete documentation blocker.</p>
+<pre><code class="language-bash">kronika sync --dry-run
+</code></pre>
+<p>Report what a reconciliation run would do for every manifest-declared
+document, without writing a file or the state. The end-to-end path is
+<a href="/docs/quick-start/">quick-start</a>; the full command surface is <a href="/docs/cli/">cli</a>.</p>
+<h2 id="the-rest-of-the-corpus">The rest of the corpus</h2>
+<ul>
+<li><strong>Nouns</strong> — <a href="/docs/concepts/source-collection/">source collection</a>,
+  <a href="/docs/concepts/check/">check</a>, <a href="/docs/concepts/audit/">audit</a>,
+  <a href="/docs/concepts/finding/">finding</a>,
+  <a href="/docs/concepts/blocker-vs-warning/">blocker vs warning</a>,
+  <a href="/docs/concepts/manifest/">manifest</a>, <a href="/docs/concepts/state/">state</a>,
+  <a href="/docs/concepts/baseline/">baseline</a>, <a href="/docs/concepts/drift/">drift</a>.</li>
+<li><strong>Executed end to end</strong> — <a href="/docs/walkthroughs/check/">gating one change</a>,
+  <a href="/docs/walkthroughs/sync-cycle/">one full sync cycle</a>,
+  runnable <a href="/docs/examples/">examples</a>.</li>
+<li><strong>When it fails</strong> — every error sentence, with meaning and fix:
+  <a href="/docs/runbook/">runbook</a>.</li>
+<li><strong>Boundaries</strong> — what Kronika owns, what it refuses to own, and what
+  leaves the machine: <a href="/docs/architecture/">architecture</a>.</li>
+</ul>
+      </article>
+      <nav class="page-turn" aria-label="Documentation pages"><span></span><a class="next" href="/docs/quick-start/"><small>Next</small><span>Quick start →</span></a></nav>
+      <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>
+    </main>
+  </div>
+</body>
+</html>

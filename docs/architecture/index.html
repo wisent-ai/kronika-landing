@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Architecture — Kronika documentation</title>
+  <meta name="description" content="Where does Kronika sit, what does it own, and what never crosses its boundaries? Kronika is a client-side gate between three parties: a Git repository (the only admissible evidence), Brama (">
+  <link rel="canonical" href="https://kronika.wisent.com/docs/architecture/">
+  <meta name="theme-color" content="#10100f">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body class="docs-page">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header docs-header">
+    <a class="brand" href="/" aria-label="Kronika home"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4.5h14.5A3.5 3.5 0 0 1 25 8v19H10a4 4 0 0 1-4-4V5.5a1 1 0 0 1 1-1Z"/><path d="M10 27a4 4 0 0 1 4-4h11M11 10h9M11 15h7"/></svg><span>Kronika</span></a>
+    <nav aria-label="Primary navigation"><a class="selected" href="/docs/">Documentation</a><a href="https://github.com/wisent-ai/kronika">GitHub</a></nav>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="docs-sidebar">Browse docs</button>
+  </header>
+  <div class="docs-frame">
+    <aside class="docs-sidebar" id="docs-sidebar">
+      <label class="docs-filter"><span class="sr-only">Filter documentation</span><input type="search" placeholder="Filter topics" autocomplete="off" data-docs-filter></label>
+      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/">What is Kronika</a><a href="/docs/quick-start/">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/">CLI reference</a><a href="/docs/sync/">The sync loop</a><a href="/docs/runbook/">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/" aria-current="page" class="active">Architecture</a><a href="/docs/library/">Library API</a><a href="/docs/site-pipeline/">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section><section><h2>Concepts</h2><a href="/docs/concepts/source-collection/">Source collection</a><a href="/docs/concepts/check/">Check</a><a href="/docs/concepts/audit/">Audit</a><a href="/docs/concepts/finding/">Finding</a><a href="/docs/concepts/blocker-vs-warning/">Blocker vs warning</a><a href="/docs/concepts/manifest/">Sync manifest</a><a href="/docs/concepts/state/">Sync state</a><a href="/docs/concepts/baseline/">Baseline</a><a href="/docs/concepts/drift/">Drift</a></section><section><h2>Walkthroughs</h2><a href="/docs/walkthroughs/check/">Walkthrough: gating one change</a><a href="/docs/walkthroughs/sync-cycle/">Walkthrough: one full sync cycle</a><a href="/docs/examples/">Examples — kronika in practice</a></section></nav>
+      <p class="filter-empty" hidden>No matching topics.</p>
+    </aside>
+    <main id="content" class="docs-main">
+      <div class="breadcrumbs"><a href="/docs/">Docs</a><span aria-hidden="true">/</span><span>Architecture</span></div>
+      <article class="prose">
+        <div class="article-kicker">Kronika documentation</div>
+        <h1>Architecture</h1>
+        <p>Where does Kronika sit, what does it own, and what never crosses its
+boundaries? Kronika is a client-side gate between three parties: a Git
+repository (the only admissible evidence), Brama (the only model access),
+and whatever consumes the documentation afterwards — CI, a scheduler, or the
+separate site pipeline.</p>
+<h2 id="data-flow">Data flow</h2>
+<pre><code class="language-text">                 repository (working tree + Git history)
+                        |                    |
+              collectSources             git rev-parse / diff
+             (selection boundary)        (exact SHAs, bounded patch)
+                        |                    |
+                        v                    v
+                 one prompt: system rules + file-framed sources [+ diff]
+                        |
+                        v
+                 BramaClient — POST &lt;BRAMA_URL&gt;/v1/chat/completions
+                 bearer + optional HMAC body signature, hard timeout
+                        |
+                        v
+        write: Markdown  --normalize--&gt;  preview stdout | atomic --apply
+        check: JSON verdict --validate--&gt; exit code / findings
+                        ^
+                        |
+   sync loop: manifest + state decide, per document, whether any call
+   happens at all (baseline / advanced / audit / rewrite)  — src/sync.ts
+</code></pre>
+<p>Every model interaction in the <code>kronika</code> CLI is exactly one chat completion
+(<code>src/brama.ts</code>). There is no streaming, no tool use, no retry loop, no
+second provider: if Brama does not answer, the verb fails with the
+transport's own sentence (<a href="/docs/runbook/">runbook</a>).</p>
+<h2 id="what-kronika-owns">What Kronika owns</h2>
+<ul>
+<li><strong>The evidence boundary.</strong> What a prompt may contain is decided before any
+  network call: Git-aware discovery, secret-prone exclusions, repository
+  confinement, byte budgets — all inspectable via <code>kronika sources</code> with no
+  Brama configuration at all (<a href="/docs/concepts/source-collection/">concepts/source-collection</a>).</li>
+<li><strong>The verdict contract.</strong> Model answers are structured claims that get
+  validated, not trusted: strict JSON verdicts for audits, normalized
+  Markdown for rewrites (fence stripped, too-short and NUL content refused).</li>
+<li><strong>The loop's memory.</strong> <code>kronika.sync.json</code> (intent) and
+  <code>kronika.sync-state.json</code> (progress) live in the target repository and are
+  meant to be committed; the audit trail is the Git log itself
+  (<a href="/docs/concepts/manifest/">concepts/manifest</a>, <a href="/docs/concepts/state/">concepts/state</a>).</li>
+<li><strong>Atomicity of the one write it performs.</strong> <code>--apply</code> writes a temporary
+  file beside the target and renames it into place, preserving mode; a
+  failed write leaves the old document intact (<code>src/writer.ts</code>).</li>
+</ul>
+<h2 id="what-kronika-does-not-own">What Kronika does not own</h2>
+<ul>
+<li><strong>Model routing, authorization, inference.</strong> Brama's job. Kronika sends a
+  <code>model</code> selector string (default <code>any</code>) and credentials from the
+  environment; it never talks to a provider, holds no key store, and has no
+  fallback endpoint (<a href="/docs/configuration/">configuration</a>).</li>
+<li><strong>Scheduling.</strong> <code>kronika sync --commit --push</code> is designed to be run by
+  cron, launchd, or CI; Kronika keeps no daemon, no queue, no clock.</li>
+<li><strong>Truth of prose.</strong> A passing audit means the model found no blocker in
+  the supplied evidence — a maintainer still reviews claims and omissions.</li>
+<li><strong>Publishing.</strong> The site pipeline (<code>docs-cli</code>, under <code>pipeline/</code>) is a
+  separate subsystem with its own inputs (<code>docs-sources.json</code>), its own
+  endpoint resolution (<code>BRAMA_URL</code>, else the local resolver adapter at
+  <code>http://127.0.0.1:17601</code>), its own validators, and its own exit codes —
+  it shares the repository and Brama, not code paths
+  (<a href="/docs/site-pipeline/">site-pipeline</a>).</li>
+<li><strong>Execution of repository content.</strong> Kronika reads files and runs <code>git</code>;
+  it never runs the repository's build, tests, or scripts. (The pipeline's
+  drift validator runs only the declared product binary with subcommand
+  words plus <code>--help</code>/<code>--version</code>, allowlisted, never shell-interpreted.)</li>
+</ul>
+<h2 id="trust-boundaries">Trust boundaries</h2>
+<table>
+<thead>
+<tr>
+<th>Boundary</th>
+<th>Rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>repository → prompt</td>
+<td>Untrusted reference data. Both system prompts instruct the model to ignore instructions embedded in sources and diffs (prompt-injection stance), and to never reproduce credentials, tokens, keys, personal data, or private infrastructure addresses.</td>
+</tr>
+<tr>
+<td>repository → selection</td>
+<td>Secret-prone names never selected; symlinks never followed; nothing outside the repository root read or written.</td>
+</tr>
+<tr>
+<td>environment → request</td>
+<td><code>BRAMA_API_KEY</code> rides only in the <code>authorization</code> header; the optional HMAC pair signs <code>agentId:timestamp:sha256(body)</code> so the signature commits to the exact payload. Secrets never enter prompts, output, manifest, or state.</td>
+</tr>
+<tr>
+<td>model → repository</td>
+<td>Only through validation: verdicts parsed field by field; rewrites normalized and refused when degenerate; only <code>--apply</code>/sync-rewrite writes, atomically, inside the repository.</td>
+</tr>
+<tr>
+<td>sync → Git history</td>
+<td><code>--commit</code> stages exactly the rewritten documents plus the state file; <code>--push</code> pushes that one commit. Kronika never force-pushes, rebases, or edits history.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="what-leaves-the-machine">What leaves the machine</h2>
+<p>One POST per model call to <code>BRAMA_URL</code>, containing: the repository's base
+name, the instruction, the selected file manifest and contents, and for
+audits the resolved SHAs and the bounded diff. Budgets cap it:
+<code>--max-file-bytes</code>, <code>--max-input-bytes</code>, <code>--max-diff-bytes</code>. Nothing else is
+transmitted, and <code>kronika sources</code> shows the exact file list beforehand.</p>
+<h2 id="failure-posture">Failure posture</h2>
+<p>Fail closed, loudly, in one line: every error is <code>kronika: &lt;message&gt;</code> on
+stderr with exit <code>1</code>. Oversized diffs are refused rather than truncated;
+contradictory verdicts are refused rather than reinterpreted; a failed sync
+document keeps its <a href="/docs/concepts/baseline/">baseline</a> so the next tick retries
+the same range. The complete sentence inventory is the
+<a href="/docs/runbook/">runbook</a>.</p>
+      </article>
+      <nav class="page-turn" aria-label="Documentation pages"><a class="previous" href="/docs/runbook/"><small>Previous</small><span>← Runbook</span></a><a class="next" href="/docs/library/"><small>Next</small><span>Library API →</span></a></nav>
+      <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>
+    </main>
+  </div>
+</body>
+</html>

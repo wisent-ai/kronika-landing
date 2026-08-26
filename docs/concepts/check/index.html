@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Check — Kronika documentation</title>
+  <meta name="description" content="Should this change merge? A check is Kronika&#x27;s gate verb: one audit of one exact Git range, turned into an exit code a CI job can key on. kronika check is the only command whose success depe">
+  <link rel="canonical" href="https://kronika.wisent.com/docs/concepts/check/">
+  <meta name="theme-color" content="#10100f">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body class="docs-page">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header docs-header">
+    <a class="brand" href="/" aria-label="Kronika home"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4.5h14.5A3.5 3.5 0 0 1 25 8v19H10a4 4 0 0 1-4-4V5.5a1 1 0 0 1 1-1Z"/><path d="M10 27a4 4 0 0 1 4-4h11M11 10h9M11 15h7"/></svg><span>Kronika</span></a>
+    <nav aria-label="Primary navigation"><a class="selected" href="/docs/">Documentation</a><a href="https://github.com/wisent-ai/kronika">GitHub</a></nav>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="docs-sidebar">Browse docs</button>
+  </header>
+  <div class="docs-frame">
+    <aside class="docs-sidebar" id="docs-sidebar">
+      <label class="docs-filter"><span class="sr-only">Filter documentation</span><input type="search" placeholder="Filter topics" autocomplete="off" data-docs-filter></label>
+      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/">What is Kronika</a><a href="/docs/quick-start/">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/">CLI reference</a><a href="/docs/sync/">The sync loop</a><a href="/docs/runbook/">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/">Architecture</a><a href="/docs/library/">Library API</a><a href="/docs/site-pipeline/">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section><section><h2>Concepts</h2><a href="/docs/concepts/source-collection/">Source collection</a><a href="/docs/concepts/check/" aria-current="page" class="active">Check</a><a href="/docs/concepts/audit/">Audit</a><a href="/docs/concepts/finding/">Finding</a><a href="/docs/concepts/blocker-vs-warning/">Blocker vs warning</a><a href="/docs/concepts/manifest/">Sync manifest</a><a href="/docs/concepts/state/">Sync state</a><a href="/docs/concepts/baseline/">Baseline</a><a href="/docs/concepts/drift/">Drift</a></section><section><h2>Walkthroughs</h2><a href="/docs/walkthroughs/check/">Walkthrough: gating one change</a><a href="/docs/walkthroughs/sync-cycle/">Walkthrough: one full sync cycle</a><a href="/docs/examples/">Examples — kronika in practice</a></section></nav>
+      <p class="filter-empty" hidden>No matching topics.</p>
+    </aside>
+    <main id="content" class="docs-main">
+      <div class="breadcrumbs"><a href="/docs/">Docs</a><span aria-hidden="true">/</span><span>Check</span></div>
+      <article class="prose">
+        <div class="article-kicker">Kronika documentation</div>
+        <h1>Check</h1>
+        <p>Should this change merge? A check is Kronika's gate verb: one
+<a href="/docs/concepts/audit/">audit</a> of one exact Git range, turned into an exit code a CI job
+can key on. <code>kronika check</code> is the only command whose success depends on a
+model's verdict — and it is wired so that a broken verdict blocks exactly
+like a failed one.</p>
+<h2 id="what-it-is">What it is</h2>
+<p><code>kronika check --base &lt;ref&gt; [--head &lt;ref&gt;]</code> runs exactly one audit
+(<code>src/cli.ts</code> → <code>checkDocumentation</code>):</p>
+<ul>
+<li><code>--base</code> is required and has no default — the caller names the point the
+  change is measured from. <code>--head</code> defaults to <code>HEAD</code>.</li>
+<li>Both refs are resolved to commit SHAs before anything else; the SHAs, not
+  the moving refs, appear in the prompt and the result.</li>
+<li>The audited diff is the three-dot range <code>base...head</code> — changes since the
+  merge base, so a branch is judged only on what it adds.</li>
+<li>The whole range is in scope: bare <code>check</code> passes no pathspec restriction,
+  so every changed path is audited against every selected source. (The
+  <a href="/docs/sync/">sync loop</a> reuses the same audit with <code>diffPaths</code> restricted
+  to one document's declared evidence — that restriction is sync's, not
+  check's.)</li>
+</ul>
+<h2 id="lifecycle">Lifecycle</h2>
+<ol>
+<li>Parse flags; <code>check requires --base &lt;ref&gt;</code> is refused before anything
+   runs.</li>
+<li>Require <code>BRAMA_URL</code>/<code>BRAMA_API_KEY</code> (or their <code>MODEL_ROUTER_*</code> aliases)
+   from the environment (<a href="/docs/configuration/">configuration</a>).</li>
+<li>Collect the <a href="/docs/concepts/source-collection/">source collection</a> and resolve the
+   range; refuse an oversized diff rather than truncate it.</li>
+<li>One completion through Brama; validate the verdict field by field
+   (<a href="/docs/concepts/finding/">finding</a>).</li>
+<li>Print, then exit: <code>0</code> exactly when the validated verdict has no
+   <a href="/docs/concepts/blocker-vs-warning/">blocker</a>; <code>1</code> on blockers <strong>or any failure</strong>.</li>
+</ol>
+<h2 id="output">Output</h2>
+<p>Text output is the verdict line, the summary, and one line per finding —
+captured against a toy repository with a scripted verdict:</p>
+<pre><code class="language-console">$ kronika check --base HEAD~1
+Kronika documentation check: BLOCKED
+src/greet.js adds a --shout flag that docs/usage.md does not mention.
+  - blocker: The new --shout flag changes the public CLI surface and is absent from docs/usage.md.
+</code></pre>
+<p><code>--json</code> pins the audit to its coordinates — exact SHAs, changed paths,
+diff size, source count — so a gate's decision is reproducible from its own
+record:</p>
+<pre><code class="language-json">{
+  &quot;passed&quot;: false,
+  &quot;summary&quot;: &quot;src/greet.js adds a --shout flag that docs/usage.md does not mention.&quot;,
+  &quot;findings&quot;: [ { &quot;severity&quot;: &quot;blocker&quot;, &quot;code&quot;: &quot;undocumented-flag&quot;, &quot;...&quot;: &quot;...&quot; } ],
+  &quot;model&quot;: &quot;stub/dokument-1&quot;,
+  &quot;baseSha&quot;: &quot;3520b2d97e40a9613d083361b38bfaddb11084a2&quot;,
+  &quot;headSha&quot;: &quot;9486e1b31a66425588612a10236a371e4125038a&quot;,
+  &quot;changedPaths&quot;: [&quot;docs/usage.md&quot;, &quot;kronika.sync-state.json&quot;, &quot;src/greet.js&quot;],
+  &quot;diffBytes&quot;: 1104,
+  &quot;sourceCount&quot;: 5,
+  &quot;skipped&quot;: [{ &quot;path&quot;: &quot;credentials.json&quot;, &quot;reason&quot;: &quot;credential or generated lock file&quot; }]
+}
+</code></pre>
+<p>The full field list is in <a href="/docs/cli/#kronika-check">cli</a>; a blocked and a
+passing run end to end are in <a href="/docs/walkthroughs/check/">walkthrough-check</a>.</p>
+<h2 id="the-gate-never-fails-open">The gate never fails open</h2>
+<p>Exit <code>1</code> covers every non-passing outcome, deliberately: blocker findings,
+an unresolvable ref, an oversized diff, an unreachable Brama, a timeout, a
+verdict that is not valid JSON, and a verdict whose <code>passed</code> contradicts
+its own blockers. A CI job therefore needs no error handling beyond the
+exit status:</p>
+<pre><code class="language-bash">kronika check --repo . --base &quot;origin/${GITHUB_BASE_REF:-main}&quot; --json
+</code></pre>
+<p>Runnable version: <a href="https://github.com/wisent-ai/kronika/blob/main/docs/examples/gate-a-change.sh">examples/gate-a-change.sh</a>.
+<a href="/docs/concepts/blocker-vs-warning/">Warnings</a> print but never gate — a passing verdict
+with warnings still exits <code>0</code>.</p>
+<h2 id="refusals">Refusals</h2>
+<p>Exact sentences, captured; every one is in the <a href="/docs/runbook/">runbook</a>:</p>
+<pre><code class="language-console">$ kronika check
+kronika: check requires --base &lt;ref&gt;
+$ kronika check --base
+kronika: --base requires a value
+$ kronika check --base deadbeef
+kronika: Git commit cannot be resolved: deadbeef
+$ kronika check --base HEAD~1 --max-diff-bytes 1
+kronika: Git diff is 359 bytes, above --max-diff-bytes 1; narrow or split the change rather than auditing a truncated diff
+</code></pre>
+<p>Transport, environment, and verdict-validation failures surface their own
+sentences (<code>fetch failed</code>, <code>Brama request timed out after &lt;n&gt;ms</code>,
+<code>Kronika returned invalid documentation-check JSON</code>, …) — all exit <code>1</code>.</p>
+<h2 id="not-to-be-confused-with">Not to be confused with</h2>
+<ul>
+<li><strong>The <a href="/docs/concepts/audit/">audit</a></strong> — the underlying comparison and verdict
+  contract; check is the CLI verb that runs one and turns it into an exit
+  code.</li>
+<li><strong>Sync's <code>checked-current</code></strong> — the same audit run by the loop, restricted
+  to one document's declared evidence, whose pass advances a
+  <a href="/docs/concepts/baseline/">baseline</a> instead of exiting.</li>
+<li><strong><code>kronika sources</code></strong> — shows what a check would read, but runs no audit
+  and needs no Brama configuration.</li>
+</ul>
+      </article>
+      <nav class="page-turn" aria-label="Documentation pages"><a class="previous" href="/docs/concepts/source-collection/"><small>Previous</small><span>← Source collection</span></a><a class="next" href="/docs/concepts/audit/"><small>Next</small><span>Audit →</span></a></nav>
+      <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>
+    </main>
+  </div>
+</body>
+</html>

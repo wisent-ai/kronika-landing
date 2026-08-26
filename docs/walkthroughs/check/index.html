@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Walkthrough: gating one change — Kronika documentation</title>
+  <meta name="description" content="A branch changed the public CLI surface — does the documentation still hold? This page runs kronika check over one exact change, blocked and passing, text and JSON, plus the refusals you wil">
+  <link rel="canonical" href="https://kronika.wisent.com/docs/walkthroughs/check/">
+  <meta name="theme-color" content="#10100f">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body class="docs-page">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header docs-header">
+    <a class="brand" href="/" aria-label="Kronika home"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4.5h14.5A3.5 3.5 0 0 1 25 8v19H10a4 4 0 0 1-4-4V5.5a1 1 0 0 1 1-1Z"/><path d="M10 27a4 4 0 0 1 4-4h11M11 10h9M11 15h7"/></svg><span>Kronika</span></a>
+    <nav aria-label="Primary navigation"><a class="selected" href="/docs/">Documentation</a><a href="https://github.com/wisent-ai/kronika">GitHub</a></nav>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="docs-sidebar">Browse docs</button>
+  </header>
+  <div class="docs-frame">
+    <aside class="docs-sidebar" id="docs-sidebar">
+      <label class="docs-filter"><span class="sr-only">Filter documentation</span><input type="search" placeholder="Filter topics" autocomplete="off" data-docs-filter></label>
+      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/">What is Kronika</a><a href="/docs/quick-start/">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/">CLI reference</a><a href="/docs/sync/">The sync loop</a><a href="/docs/runbook/">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/">Architecture</a><a href="/docs/library/">Library API</a><a href="/docs/site-pipeline/">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section><section><h2>Concepts</h2><a href="/docs/concepts/source-collection/">Source collection</a><a href="/docs/concepts/check/">Check</a><a href="/docs/concepts/audit/">Audit</a><a href="/docs/concepts/finding/">Finding</a><a href="/docs/concepts/blocker-vs-warning/">Blocker vs warning</a><a href="/docs/concepts/manifest/">Sync manifest</a><a href="/docs/concepts/state/">Sync state</a><a href="/docs/concepts/baseline/">Baseline</a><a href="/docs/concepts/drift/">Drift</a></section><section><h2>Walkthroughs</h2><a href="/docs/walkthroughs/check/" aria-current="page" class="active">Walkthrough: gating one change</a><a href="/docs/walkthroughs/sync-cycle/">Walkthrough: one full sync cycle</a><a href="/docs/examples/">Examples — kronika in practice</a></section></nav>
+      <p class="filter-empty" hidden>No matching topics.</p>
+    </aside>
+    <main id="content" class="docs-main">
+      <div class="breadcrumbs"><a href="/docs/">Docs</a><span aria-hidden="true">/</span><span>Walkthrough: gating one change</span></div>
+      <article class="prose">
+        <div class="article-kicker">Kronika documentation</div>
+        <h1>Walkthrough: gating one change</h1>
+        <p>A branch changed the public CLI surface — does the documentation still hold?
+This page runs <code>kronika check</code> over one exact change, blocked and passing,
+text and JSON, plus the refusals you will actually meet, all output pasted
+verbatim. The gate verb is <a href="/docs/concepts/check/">concepts/check</a>; the audit's
+contract is <a href="/docs/concepts/audit/">concepts/audit</a>; the finding vocabulary is
+<a href="/docs/concepts/finding/">concepts/finding</a> and
+<a href="/docs/concepts/blocker-vs-warning/">concepts/blocker-vs-warning</a>.</p>
+<p><strong>How this was captured.</strong> Same setup as
+<a href="/docs/walkthroughs/sync-cycle/">walkthrough-sync-cycle</a>: built CLI, toy
+repository under <code>/tmp</code>, placeholder credentials. Transport and Git
+refusals use the product's own offline paths (closed local port); the two
+verdicts come from a local stub answering <code>/v1/chat/completions</code> with
+scripted JSON — the parsing and validation exercised are Kronika's real
+code, the verdict prose is canned and marked.</p>
+<h2 id="the-change">The change</h2>
+<p><code>src/greet.js</code> gained a <code>--shout</code> flag in the head commit;
+<code>docs/usage.md</code> does not mention it. The audit range is one commit:</p>
+<pre><code class="language-bash">kronika check --base HEAD~1
+</code></pre>
+<p><code>--head</code> defaults to <code>HEAD</code>; both are resolved to SHAs before anything else.</p>
+<h2 id="inspect-the-evidence-first-no-brama">Inspect the evidence first (no Brama)</h2>
+<pre><code class="language-console">$ kronika sources
+{
+  &quot;repo&quot;: &quot;/private/tmp/kronika-docs.OnmsmX/toy&quot;,
+  &quot;output&quot;: &quot;README.md&quot;,
+  &quot;totalBytes&quot;: 442,
+  &quot;sources&quot;: [
+    { &quot;path&quot;: &quot;README.md&quot;, &quot;bytes&quot;: 87 },
+    { &quot;path&quot;: &quot;docs/usage.md&quot;, &quot;bytes&quot;: 80 },
+    { &quot;path&quot;: &quot;src/greet.js&quot;, &quot;bytes&quot;: 93 },
+    { &quot;path&quot;: &quot;kronika.sync.json&quot;, &quot;bytes&quot;: 182 }
+  ],
+  &quot;skipped&quot;: []
+}
+</code></pre>
+<p>This is exactly the file set the audit will see beside the diff
+(<a href="/docs/concepts/source-collection/">concepts/source-collection</a>).</p>
+<h2 id="blocked-stub-verdict">Blocked (stub verdict)</h2>
+<pre><code class="language-console">$ kronika check --base HEAD~1
+Kronika documentation check: BLOCKED
+src/greet.js adds a --shout flag that docs/usage.md does not mention.
+  - blocker: The new --shout flag changes the public CLI surface and is absent from docs/usage.md.
+</code></pre>
+<p>Exit <code>1</code> — the shape CI keys on. The machine-readable form:</p>
+<pre><code class="language-console">$ kronika check --base HEAD~1 --json
+{
+  &quot;passed&quot;: false,
+  &quot;summary&quot;: &quot;src/greet.js adds a --shout flag that docs/usage.md does not mention.&quot;,
+  &quot;findings&quot;: [
+    {
+      &quot;severity&quot;: &quot;blocker&quot;,
+      &quot;code&quot;: &quot;undocumented-flag&quot;,
+      &quot;document&quot;: &quot;docs/usage.md&quot;,
+      &quot;sourcePaths&quot;: [&quot;src/greet.js&quot;],
+      &quot;message&quot;: &quot;The new --shout flag changes the public CLI surface and is absent from docs/usage.md.&quot;,
+      &quot;requiredChange&quot;: &quot;Document the --shout flag: it upper-cases the greeting.&quot;
+    }
+  ],
+  &quot;model&quot;: &quot;stub/dokument-1&quot;,
+  &quot;baseSha&quot;: &quot;ae467f145f80b713915290c5c24e313ce87e13b5&quot;,
+  &quot;headSha&quot;: &quot;9d577cd6dad04c7c9de7d77fc0d3e1169025d36a&quot;,
+  &quot;changedPaths&quot;: [&quot;src/greet.js&quot;],
+  &quot;diffBytes&quot;: 456,
+  &quot;sourceCount&quot;: 5,
+  &quot;skipped&quot;: []
+}
+</code></pre>
+<p>Note what the result pins down: exact SHAs, the changed paths, the diff
+size, and how many sources were supplied — the audit is reproducible from
+its own record.</p>
+<h2 id="passing-stub-verdict">Passing (stub verdict)</h2>
+<p>After the documentation covers the flag:</p>
+<pre><code class="language-console">$ kronika check --base HEAD~1
+Kronika documentation check: PASSED
+docs/usage.md already documents the changed greeting behavior; no public surface is missing.
+</code></pre>
+<p>Exit <code>0</code>. Warnings, had there been any, would print but not gate.</p>
+<h2 id="as-a-ci-gate">As a CI gate</h2>
+<pre><code class="language-bash">kronika check --repo . --base &quot;origin/${GITHUB_BASE_REF:-main}&quot; --json
+</code></pre>
+<p>Exit <code>0</code> merges, exit <code>1</code> blocks with named findings in the log. The
+three-dot diff means only the branch's own changes are audited. Runnable
+version: <a href="https://github.com/wisent-ai/kronika/blob/main/docs/examples/gate-a-change.sh">examples/gate-a-change.sh</a>.</p>
+<h2 id="the-refusals-you-will-meet">The refusals you will meet</h2>
+<p>All captured; every sentence is in the <a href="/docs/runbook/">runbook</a>.</p>
+<p>An oversized diff is refused, never truncated:</p>
+<pre><code class="language-console">$ kronika check --base HEAD~1 --max-diff-bytes 1
+kronika: Git diff is 456 bytes, above --max-diff-bytes 1; narrow or split the change rather than auditing a truncated diff
+</code></pre>
+<p>A ref that is not a commit here:</p>
+<pre><code class="language-console">$ kronika check --base deadbeef
+kronika: Git commit cannot be resolved: deadbeef
+</code></pre>
+<p>Brama unreachable (closed port — the offline evidence path):</p>
+<pre><code class="language-console">$ kronika check --base HEAD~1
+kronika: fetch failed
+</code></pre>
+<p>Too slow for the budget:</p>
+<pre><code class="language-console">$ kronika check --base HEAD~1 --timeout-ms 1
+kronika: Brama request timed out after 1ms
+</code></pre>
+<p>And a verdict that fails validation is an error, not a pass — captured by
+scripting the stub to answer prose and a self-contradicting verdict:</p>
+<pre><code class="language-console">kronika: Kronika returned invalid documentation-check JSON
+kronika: Kronika documentation check contradicts its blocker findings
+</code></pre>
+<p>Each of these exits <code>1</code>, so a broken audit blocks like a failed one; the
+gate cannot fail open.</p>
+      </article>
+      <nav class="page-turn" aria-label="Documentation pages"><a class="previous" href="/docs/concepts/drift/"><small>Previous</small><span>← Drift</span></a><a class="next" href="/docs/walkthroughs/sync-cycle/"><small>Next</small><span>Walkthrough: one full sync cycle →</span></a></nav>
+      <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>
+    </main>
+  </div>
+</body>
+</html>

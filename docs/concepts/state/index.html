@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sync state — Kronika documentation</title>
+  <meta name="description" content="How does a loop that runs forever avoid redoing work — or worse, silently skipping it? The sync state file — kronika.sync-state.json, overridable with --state — is the loop&#x27;s committed memor">
+  <link rel="canonical" href="https://kronika.wisent.com/docs/concepts/state/">
+  <meta name="theme-color" content="#10100f">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body class="docs-page">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header docs-header">
+    <a class="brand" href="/" aria-label="Kronika home"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4.5h14.5A3.5 3.5 0 0 1 25 8v19H10a4 4 0 0 1-4-4V5.5a1 1 0 0 1 1-1Z"/><path d="M10 27a4 4 0 0 1 4-4h11M11 10h9M11 15h7"/></svg><span>Kronika</span></a>
+    <nav aria-label="Primary navigation"><a class="selected" href="/docs/">Documentation</a><a href="https://github.com/wisent-ai/kronika">GitHub</a></nav>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="docs-sidebar">Browse docs</button>
+  </header>
+  <div class="docs-frame">
+    <aside class="docs-sidebar" id="docs-sidebar">
+      <label class="docs-filter"><span class="sr-only">Filter documentation</span><input type="search" placeholder="Filter topics" autocomplete="off" data-docs-filter></label>
+      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/">What is Kronika</a><a href="/docs/quick-start/">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/">CLI reference</a><a href="/docs/sync/">The sync loop</a><a href="/docs/runbook/">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/">Architecture</a><a href="/docs/library/">Library API</a><a href="/docs/site-pipeline/">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section><section><h2>Concepts</h2><a href="/docs/concepts/source-collection/">Source collection</a><a href="/docs/concepts/check/">Check</a><a href="/docs/concepts/audit/">Audit</a><a href="/docs/concepts/finding/">Finding</a><a href="/docs/concepts/blocker-vs-warning/">Blocker vs warning</a><a href="/docs/concepts/manifest/">Sync manifest</a><a href="/docs/concepts/state/" aria-current="page" class="active">Sync state</a><a href="/docs/concepts/baseline/">Baseline</a><a href="/docs/concepts/drift/">Drift</a></section><section><h2>Walkthroughs</h2><a href="/docs/walkthroughs/check/">Walkthrough: gating one change</a><a href="/docs/walkthroughs/sync-cycle/">Walkthrough: one full sync cycle</a><a href="/docs/examples/">Examples — kronika in practice</a></section></nav>
+      <p class="filter-empty" hidden>No matching topics.</p>
+    </aside>
+    <main id="content" class="docs-main">
+      <div class="breadcrumbs"><a href="/docs/">Docs</a><span aria-hidden="true">/</span><span>Sync state</span></div>
+      <article class="prose">
+        <div class="article-kicker">Kronika documentation</div>
+        <h1>Sync state</h1>
+        <p>How does a loop that runs forever avoid redoing work — or worse, silently
+skipping it? The sync state file — <code>kronika.sync-state.json</code>, overridable
+with <code>--state</code> — is the loop's committed memory: per maintained document,
+the last commit it was reconciled against and what reconciled it.</p>
+<h2 id="shape">Shape</h2>
+<p>Captured from a real first tick:</p>
+<pre><code class="language-json">{
+  &quot;schemaVersion&quot;: 1,
+  &quot;documents&quot;: {
+    &quot;docs/usage.md&quot;: {
+      &quot;headSha&quot;: &quot;39825d883997f79f823e7d9be4a24d3f0ea77321&quot;,
+      &quot;syncedAt&quot;: &quot;2026-08-24T22:03:29.990Z&quot;,
+      &quot;lastAction&quot;: &quot;baseline&quot;
+    }
+  }
+}
+</code></pre>
+<p>Per entry (<code>SyncStateEntry</code>, <code>src/sync.ts</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>headSha</code></td>
+<td>the <a href="/docs/concepts/baseline/">baseline</a>: full commit SHA the document was last reconciled against</td>
+</tr>
+<tr>
+<td><code>syncedAt</code></td>
+<td>ISO-8601 timestamp of that reconciliation</td>
+</tr>
+<tr>
+<td><code>lastAction</code></td>
+<td>what advanced it: <code>baseline</code>, <code>advanced</code>, <code>checked-current</code>, or <code>rewritten</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>current</code> and <code>failed</code> never appear in <code>lastAction</code>: a <code>current</code> tick writes
+nothing, and a <code>failed</code> outcome deliberately does not advance.</p>
+<h2 id="lifecycle">Lifecycle</h2>
+<ul>
+<li><strong>Missing file</strong> — valid: no document has a baseline yet; every entry's
+  first tick records one.</li>
+<li><strong>Written</strong> — only when at least one entry advanced and the run is not
+  <code>--dry-run</code>; the file is rewritten whole, pretty-printed, trailing
+  newline.</li>
+<li><strong>Committed</strong> — <code>--commit</code> stages it beside any rewritten documents; the
+  state is the auditable record of the loop and belongs in history.</li>
+<li><strong>Entry deleted by hand</strong> — that document re-baselines on the next tick.
+  This is the one supported recovery for a baseline that can no longer be
+  diffed (rewritten history) and for a corrupt entry.</li>
+<li><strong>Whole file deleted</strong> — every document re-baselines; nothing is
+  generated, so the cost is only that drift since the old baselines is no
+  longer visible.</li>
+</ul>
+<h2 id="invariants">Invariants</h2>
+<ul>
+<li>The state never contains prose, findings, or model output — only the
+  coordinates of agreement. Everything else is reconstructible from Git.</li>
+<li>A <code>failed</code> outcome never advances <code>headSha</code>, so the next tick retries the
+  same range; the loop cannot lose a defect by crashing past it
+  (<a href="/docs/concepts/baseline/">baseline</a>).</li>
+<li>Validation is strict: invalid JSON and unknown <code>schemaVersion</code> are fatal;
+  a missing or null <code>documents</code> map is normalized to empty.</li>
+<li>State writes are plain <code>writeFileSync</code> — last writer wins. Run one sync
+  per repository at a time; two concurrent syncs of the same repo can race
+  on the state file and on <code>--commit</code>.</li>
+</ul>
+<h2 id="refusals">Refusals</h2>
+<p>Exact sentences from <code>loadSyncState</code> (<code>src/sync.ts</code>):</p>
+<ul>
+<li><code>Sync state is not valid JSON: &lt;path&gt;. Fix or delete it to re-baseline.</code></li>
+<li><code>Unsupported sync state schemaVersion in &lt;path&gt;</code></li>
+</ul>
+<p>And the per-document <code>failed</code> detail when a recorded baseline is gone,
+captured verbatim (dry run, fabricated SHA):</p>
+<pre><code class="language-text">failed          docs/usage.md — the recorded baseline 111111111111 cannot be
+diffed against HEAD: &lt;git's own error&gt;. Delete this entry from the state
+file to re-baseline.
+</code></pre>
+<h2 id="not-to-be-confused-with">Not to be confused with</h2>
+<ul>
+<li><strong>The <a href="/docs/concepts/manifest/">manifest</a></strong> — human intent, edited by people; the
+  state is machine progress, written by Kronika.</li>
+<li><strong>The <a href="/docs/concepts/baseline/">baseline</a></strong> — one entry's <code>headSha</code>; the state file is
+  the container for all of them.</li>
+<li><strong>Git itself</strong> — the state names commits but holds no content; deleting it
+  loses no document.</li>
+</ul>
+      </article>
+      <nav class="page-turn" aria-label="Documentation pages"><a class="previous" href="/docs/concepts/manifest/"><small>Previous</small><span>← Sync manifest</span></a><a class="next" href="/docs/concepts/baseline/"><small>Next</small><span>Baseline →</span></a></nav>
+      <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>
+    </main>
+  </div>
+</body>
+</html>

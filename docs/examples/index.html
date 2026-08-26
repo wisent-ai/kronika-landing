@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Examples — kronika in practice — Kronika documentation</title>
+  <meta name="description" content="Executable examples as plain command sequences — set -eu, a usage comment, env for values, nothing else. Every line is copy-paste runnable; verification is itself a printed command or an exi">
+  <link rel="canonical" href="https://kronika.wisent.com/docs/examples/">
+  <meta name="theme-color" content="#10100f">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body class="docs-page">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header docs-header">
+    <a class="brand" href="/" aria-label="Kronika home"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4.5h14.5A3.5 3.5 0 0 1 25 8v19H10a4 4 0 0 1-4-4V5.5a1 1 0 0 1 1-1Z"/><path d="M10 27a4 4 0 0 1 4-4h11M11 10h9M11 15h7"/></svg><span>Kronika</span></a>
+    <nav aria-label="Primary navigation"><a class="selected" href="/docs/">Documentation</a><a href="https://github.com/wisent-ai/kronika">GitHub</a></nav>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="docs-sidebar">Browse docs</button>
+  </header>
+  <div class="docs-frame">
+    <aside class="docs-sidebar" id="docs-sidebar">
+      <label class="docs-filter"><span class="sr-only">Filter documentation</span><input type="search" placeholder="Filter topics" autocomplete="off" data-docs-filter></label>
+      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/">What is Kronika</a><a href="/docs/quick-start/">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/">CLI reference</a><a href="/docs/sync/">The sync loop</a><a href="/docs/runbook/">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/">Architecture</a><a href="/docs/library/">Library API</a><a href="/docs/site-pipeline/">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section><section><h2>Concepts</h2><a href="/docs/concepts/source-collection/">Source collection</a><a href="/docs/concepts/check/">Check</a><a href="/docs/concepts/audit/">Audit</a><a href="/docs/concepts/finding/">Finding</a><a href="/docs/concepts/blocker-vs-warning/">Blocker vs warning</a><a href="/docs/concepts/manifest/">Sync manifest</a><a href="/docs/concepts/state/">Sync state</a><a href="/docs/concepts/baseline/">Baseline</a><a href="/docs/concepts/drift/">Drift</a></section><section><h2>Walkthroughs</h2><a href="/docs/walkthroughs/check/">Walkthrough: gating one change</a><a href="/docs/walkthroughs/sync-cycle/">Walkthrough: one full sync cycle</a><a href="/docs/examples/" aria-current="page" class="active">Examples — kronika in practice</a></section></nav>
+      <p class="filter-empty" hidden>No matching topics.</p>
+    </aside>
+    <main id="content" class="docs-main">
+      <div class="breadcrumbs"><a href="/docs/">Docs</a><span aria-hidden="true">/</span><span>Examples — kronika in practice</span></div>
+      <article class="prose">
+        <div class="article-kicker">Kronika documentation</div>
+        <h1>Examples — kronika in practice</h1>
+        <p>Executable examples as plain command sequences — <code>set -eu</code>, a usage
+comment, env for values, nothing else. Every line is copy-paste runnable;
+verification is itself a printed command or an exit status.</p>
+<h2 id="index">Index</h2>
+<ol>
+<li><a href="https://github.com/wisent-ai/kronika/blob/main/docs/examples/inspect-boundary.sh"><code>inspect-boundary.sh</code></a> — the evidence boundary
+   without any model call: full manifest, a tight byte budget, explicit
+   selection. Needs no Brama configuration at all; safe anywhere.</li>
+<li><a href="https://github.com/wisent-ai/kronika/blob/main/docs/examples/gate-a-change.sh"><code>gate-a-change.sh</code></a> — the CI documentation gate:
+   <code>check --base origin/main --json</code>, exit status as the verdict. Blocked
+   and passing runs, with real output, are in
+   <a href="/docs/walkthroughs/check/">walkthrough-check</a>.</li>
+<li><a href="https://github.com/wisent-ai/kronika/blob/main/docs/examples/sync-forever.sh"><code>sync-forever.sh</code></a> — one schedulable tick:
+   <code>sync --dry-run</code> rehearsal, then <code>sync --commit --push</code>. Every action
+   this can take, with real output, is in
+   <a href="/docs/walkthroughs/sync-cycle/">walkthrough-sync-cycle</a>.</li>
+</ol>
+<h2 id="grounding">Grounding</h2>
+<p>Every command and flag here exists in <code>src/cli.ts</code> (see <a href="/docs/cli/">cli</a>);
+the outputs these produce were captured against a toy repository in the two
+walkthroughs. <code>inspect-boundary.sh</code> was executed as-is; the other two need
+Brama credentials, and their model-independent behavior (offline refusals,
+baseline/advance ticks, exit codes) was executed and captured with
+placeholder credentials — see each walkthrough's "How this was captured".</p>
+<h2 id="environment">Environment</h2>
+<p><code>gate-a-change.sh</code> and <code>sync-forever.sh</code> read the standard variables
+(<a href="/docs/configuration/">configuration</a>): <code>BRAMA_URL</code>, <code>BRAMA_API_KEY</code>,
+optionally <code>WISENT_APP_AGENT_ID</code> + <code>WISENT_APP_AGENT_AUTH_SECRET</code> (both or
+neither), <code>KRONIKA_MODEL</code>. Credentials come from your environment, never
+inline.</p>
+      </article>
+      <nav class="page-turn" aria-label="Documentation pages"><a class="previous" href="/docs/walkthroughs/sync-cycle/"><small>Previous</small><span>← Walkthrough: one full sync cycle</span></a></nav>
+      <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>
+    </main>
+  </div>
+</body>
+</html>

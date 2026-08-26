@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Audit — Kronika documentation</title>
+  <meta name="description" content="Did this exact change leave the documentation complete and truthful? An audit is Kronika&#x27;s answer: one bounded comparison of one Git range against the repository&#x27;s current documentation and ">
+  <link rel="canonical" href="https://kronika.wisent.com/docs/concepts/audit/">
+  <meta name="theme-color" content="#10100f">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body class="docs-page">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header docs-header">
+    <a class="brand" href="/" aria-label="Kronika home"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4.5h14.5A3.5 3.5 0 0 1 25 8v19H10a4 4 0 0 1-4-4V5.5a1 1 0 0 1 1-1Z"/><path d="M10 27a4 4 0 0 1 4-4h11M11 10h9M11 15h7"/></svg><span>Kronika</span></a>
+    <nav aria-label="Primary navigation"><a class="selected" href="/docs/">Documentation</a><a href="https://github.com/wisent-ai/kronika">GitHub</a></nav>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="docs-sidebar">Browse docs</button>
+  </header>
+  <div class="docs-frame">
+    <aside class="docs-sidebar" id="docs-sidebar">
+      <label class="docs-filter"><span class="sr-only">Filter documentation</span><input type="search" placeholder="Filter topics" autocomplete="off" data-docs-filter></label>
+      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/">What is Kronika</a><a href="/docs/quick-start/">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/">CLI reference</a><a href="/docs/sync/">The sync loop</a><a href="/docs/runbook/">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/">Architecture</a><a href="/docs/library/">Library API</a><a href="/docs/site-pipeline/">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section><section><h2>Concepts</h2><a href="/docs/concepts/source-collection/">Source collection</a><a href="/docs/concepts/check/">Check</a><a href="/docs/concepts/audit/" aria-current="page" class="active">Audit</a><a href="/docs/concepts/finding/">Finding</a><a href="/docs/concepts/blocker-vs-warning/">Blocker vs warning</a><a href="/docs/concepts/manifest/">Sync manifest</a><a href="/docs/concepts/state/">Sync state</a><a href="/docs/concepts/baseline/">Baseline</a><a href="/docs/concepts/drift/">Drift</a></section><section><h2>Walkthroughs</h2><a href="/docs/walkthroughs/check/">Walkthrough: gating one change</a><a href="/docs/walkthroughs/sync-cycle/">Walkthrough: one full sync cycle</a><a href="/docs/examples/">Examples — kronika in practice</a></section></nav>
+      <p class="filter-empty" hidden>No matching topics.</p>
+    </aside>
+    <main id="content" class="docs-main">
+      <div class="breadcrumbs"><a href="/docs/">Docs</a><span aria-hidden="true">/</span><span>Audit</span></div>
+      <article class="prose">
+        <div class="article-kicker">Kronika documentation</div>
+        <h1>Audit</h1>
+        <p>Did this exact change leave the documentation complete and truthful? An
+audit is Kronika's answer: one bounded comparison of one Git range against
+the repository's current documentation and sources, returned as a strict,
+machine-checked verdict. <code>kronika check</code> runs one audit directly; the
+<a href="/docs/sync/">sync loop</a> runs one per drifted document.</p>
+<h2 id="what-it-is">What it is</h2>
+<p>An audit is built from two inputs and answered by one model call
+(<code>src/checker.ts</code>):</p>
+<ul>
+<li><strong>The change</strong> — <code>--base</code> and <code>--head</code> resolved to commit SHAs
+  (<code>git rev-parse --verify &lt;ref&gt;^{commit}</code>), the changed paths
+  (<code>git diff --name-status --find-renames base...head</code>), and the patch
+  (<code>git diff --unified=40 --no-ext-diff --no-color --find-renames</code>).
+  The three-dot range diffs against the merge base, so an audit of a branch
+  sees only that branch's changes. When <code>diffPaths</code> is set — sync passes the
+  document's declared sources plus the document itself — both diffs are
+  restricted to those pathspecs.</li>
+<li><strong>The present</strong> — a <a href="/docs/concepts/source-collection/">source collection</a> of the
+  repository as it is now.</li>
+</ul>
+<p>The verdict is one JSON object: <code>passed</code> (boolean), <code>summary</code> (non-empty
+string), <code>findings</code> (<a href="/docs/concepts/finding/">finding</a> array). The system prompt defines
+the standard: a blocker is a concrete documentation defect caused or exposed
+by this change; internal refactors, formatting, and unchanged public
+behavior never require updates; "never require churn merely because source
+changed".</p>
+<h2 id="lifecycle">Lifecycle</h2>
+<ol>
+<li>Validate the diff budget (<code>Diff byte limit must be a positive integer</code>).</li>
+<li>Collect sources; resolve refs; take both diffs.</li>
+<li>Refuse an oversized diff — refused, never truncated, because a truncated
+   diff audits a change that did not happen.</li>
+<li>One completion through the <a href="/docs/configuration/">Brama client</a>.</li>
+<li>Parse and validate the verdict field by field; a <code>passed</code> value that
+   contradicts its own blocker findings is an error, not a pass.</li>
+<li><code>check</code> exits <code>0</code> on pass, <code>1</code> on blockers or any failure; sync maps the
+   verdict to <code>checked-current</code> or a rewrite (<a href="/docs/concepts/baseline/">baseline</a>).</li>
+</ol>
+<h2 id="invariants">Invariants</h2>
+<ul>
+<li>The audited range is exact: SHAs, not moving refs, appear in the prompt
+  and in the result (<code>baseSha</code>, <code>headSha</code>).</li>
+<li>The verdict is trusted only after validation: JSON only (one surrounding
+  code fence is tolerated), every finding well-formed, kebab-case codes,
+  <code>passed === (blockers === 0)</code>.</li>
+<li>A passing audit asserts the documentation already covers the change — in
+  sync, that assertion <em>is</em> the update; no file is touched.</li>
+<li>Repository content and diffs are supplied as untrusted reference data; the
+  system prompt instructs the model to ignore instructions embedded in them.</li>
+<li>Warnings are reported but never gate: exit codes and rewrites key on
+  blockers alone.</li>
+</ul>
+<h2 id="refusals">Refusals</h2>
+<p>Exact sentences, captured against a toy repository:</p>
+<pre><code class="language-text">kronika: Git commit cannot be resolved: deadbeef
+kronika: Git diff is 456 bytes, above --max-diff-bytes 1; narrow or split the change rather than auditing a truncated diff
+kronika: Kronika returned invalid documentation-check JSON
+kronika: Kronika documentation check contradicts its blocker findings
+</code></pre>
+<p>Plus, from <code>src/checker.ts</code>: <code>Git diff cannot be read for &lt;base&gt;...&lt;head&gt;</code>,
+<code>Kronika documentation check is not an object</code>, <code>… has no boolean passed
+field</code>, <code>… has no summary</code>, <code>… has no findings array</code>, and the per-finding
+sentences listed in <a href="/docs/concepts/finding/">finding</a>. Transport failures surface the
+<a href="/docs/runbook/#transport-and-brama-answers">Brama client's</a> own sentences.</p>
+<h2 id="not-to-be-confused-with">Not to be confused with</h2>
+<ul>
+<li><strong><a href="/docs/concepts/check/"><code>kronika check</code></a></strong> — the CLI verb that runs exactly one audit
+  and turns its verdict into an exit code; the audit is the underlying
+  comparison, reused verbatim by sync with restricted <code>diffPaths</code>.</li>
+<li><strong><a href="/docs/concepts/drift/">Drift</a></strong> — the cheap Git-only question "did declared evidence
+  change at all?". Drift decides <em>whether</em> an audit runs; the audit decides
+  what the change <em>means</em> for the documentation.</li>
+<li><strong>A rewrite</strong> — <code>write</code> guided by audit findings. The audit never edits;
+  see <a href="/docs/concepts/baseline/">baseline</a> for when sync escalates to a rewrite.</li>
+</ul>
+      </article>
+      <nav class="page-turn" aria-label="Documentation pages"><a class="previous" href="/docs/concepts/check/"><small>Previous</small><span>← Check</span></a><a class="next" href="/docs/concepts/finding/"><small>Next</small><span>Finding →</span></a></nav>
+      <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>
+    </main>
+  </div>
+</body>
+</html>

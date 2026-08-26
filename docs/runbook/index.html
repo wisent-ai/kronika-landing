@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Runbook — Kronika documentation</title>
+  <meta name="description" content="Kronika failed — what does the sentence mean, and what do you check? Every failure is one line on stderr, kronika: &lt;message, exit status 1; sync additionally reports per-document failed outc">
+  <link rel="canonical" href="https://kronika.wisent.com/docs/runbook/">
+  <meta name="theme-color" content="#10100f">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body class="docs-page">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header docs-header">
+    <a class="brand" href="/" aria-label="Kronika home"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4.5h14.5A3.5 3.5 0 0 1 25 8v19H10a4 4 0 0 1-4-4V5.5a1 1 0 0 1 1-1Z"/><path d="M10 27a4 4 0 0 1 4-4h11M11 10h9M11 15h7"/></svg><span>Kronika</span></a>
+    <nav aria-label="Primary navigation"><a class="selected" href="/docs/">Documentation</a><a href="https://github.com/wisent-ai/kronika">GitHub</a></nav>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="docs-sidebar">Browse docs</button>
+  </header>
+  <div class="docs-frame">
+    <aside class="docs-sidebar" id="docs-sidebar">
+      <label class="docs-filter"><span class="sr-only">Filter documentation</span><input type="search" placeholder="Filter topics" autocomplete="off" data-docs-filter></label>
+      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/">What is Kronika</a><a href="/docs/quick-start/">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/">CLI reference</a><a href="/docs/sync/">The sync loop</a><a href="/docs/runbook/" aria-current="page" class="active">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/">Architecture</a><a href="/docs/library/">Library API</a><a href="/docs/site-pipeline/">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section><section><h2>Concepts</h2><a href="/docs/concepts/source-collection/">Source collection</a><a href="/docs/concepts/check/">Check</a><a href="/docs/concepts/audit/">Audit</a><a href="/docs/concepts/finding/">Finding</a><a href="/docs/concepts/blocker-vs-warning/">Blocker vs warning</a><a href="/docs/concepts/manifest/">Sync manifest</a><a href="/docs/concepts/state/">Sync state</a><a href="/docs/concepts/baseline/">Baseline</a><a href="/docs/concepts/drift/">Drift</a></section><section><h2>Walkthroughs</h2><a href="/docs/walkthroughs/check/">Walkthrough: gating one change</a><a href="/docs/walkthroughs/sync-cycle/">Walkthrough: one full sync cycle</a><a href="/docs/examples/">Examples — kronika in practice</a></section></nav>
+      <p class="filter-empty" hidden>No matching topics.</p>
+    </aside>
+    <main id="content" class="docs-main">
+      <div class="breadcrumbs"><a href="/docs/">Docs</a><span aria-hidden="true">/</span><span>Runbook</span></div>
+      <article class="prose">
+        <div class="article-kicker">Kronika documentation</div>
+        <h1>Runbook</h1>
+        <p>Kronika failed — what does the sentence mean, and what do you check? Every
+failure is one line on stderr, <code>kronika: &lt;message&gt;</code>, exit status <code>1</code>; sync
+additionally reports per-document <code>failed</code> outcomes and exits <code>1</code> when any
+document failed. Every sentence below exists verbatim in <code>src/</code> and the
+marked ones were captured by running the CLI.</p>
+<h2 id="flags-and-commands">Flags and commands</h2>
+<table>
+<thead>
+<tr>
+<th>Sentence</th>
+<th>Meaning / fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Unknown command: &lt;word&gt;</code> †</td>
+<td>first argument is not <code>check</code>, <code>write</code>, <code>sources</code>, <code>sync</code>, or help</td>
+</tr>
+<tr>
+<td><code>Unknown option: &lt;flag&gt;</code> †</td>
+<td>flag not in <a href="/docs/cli/">cli</a>; one parser serves all commands</td>
+</tr>
+<tr>
+<td><code>&lt;flag&gt; requires a value</code> †</td>
+<td>value-taking flag at end of argv or followed by nothing</td>
+</tr>
+<tr>
+<td><code>&lt;flag&gt; must be a positive integer</code> †</td>
+<td>numeric flags (<code>--max-*</code>, <code>--timeout-ms</code>) reject zero, negatives, non-integers</td>
+</tr>
+<tr>
+<td><code>check requires --base &lt;ref&gt;</code> †</td>
+<td><code>check</code> has no default base; pass the ref to audit from</td>
+</tr>
+</tbody>
+</table>
+<h2 id="environment">Environment</h2>
+<table>
+<thead>
+<tr>
+<th>Sentence</th>
+<th>Meaning / fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BRAMA_URL or MODEL_ROUTER_URL is required</code> †</td>
+<td><code>check</code>/<code>write</code>/<code>sync</code> need an endpoint; <code>sources</code> and help do not</td>
+</tr>
+<tr>
+<td><code>BRAMA_API_KEY or MODEL_ROUTER_TOKEN is required</code> †</td>
+<td>bearer missing</td>
+</tr>
+<tr>
+<td><code>Brama agent ID and HMAC secret must be supplied together</code> †</td>
+<td>exactly one of <code>WISENT_APP_AGENT_ID</code> / <code>WISENT_APP_AGENT_AUTH_SECRET</code> is set; set both or neither</td>
+</tr>
+<tr>
+<td><code>Brama URL is required</code>, <code>Brama API key is required</code></td>
+<td>library-only: <code>BramaClient</code> constructed with empty options (the CLI checks the environment first)</td>
+</tr>
+</tbody>
+</table>
+<p>See <a href="/docs/configuration/">configuration</a> for what each variable does.</p>
+<h2 id="selection-refusals">Selection refusals</h2>
+<p>From <code>src/sources.ts</code> and <code>src/writer.ts</code>; all before any network call:</p>
+<table>
+<thead>
+<tr>
+<th>Sentence</th>
+<th>Meaning / fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Source is outside the repository: &lt;path&gt;</code> †</td>
+<td>explicit <code>--source</code> escapes <code>--repo</code>; selection is confined</td>
+</tr>
+<tr>
+<td><code>Source does not exist: &lt;path&gt;</code> †</td>
+<td>explicit source missing</td>
+</tr>
+<tr>
+<td><code>Symbolic-link sources are not allowed: &lt;path&gt;</code> †</td>
+<td>symlinks are never followed, even named explicitly</td>
+</tr>
+<tr>
+<td><code>Repository is not a directory: &lt;path&gt;</code> †</td>
+<td><code>--repo</code> points at a file</td>
+</tr>
+<tr>
+<td><code>Output is outside the repository: &lt;path&gt;</code> †</td>
+<td><code>--output</code> resolves outside <code>--repo</code>; refused by selector and writer both</td>
+</tr>
+<tr>
+<td><code>No safe UTF-8 source files were selected</code> †</td>
+<td><code>write</code> with an empty collection — everything was excluded, skipped, or empty; run <code>kronika sources</code> to see why</td>
+</tr>
+<tr>
+<td><code>Source byte limits must be positive</code></td>
+<td>library-only: <code>collectSources</code> called with non-positive budgets</td>
+</tr>
+</tbody>
+</table>
+<p>Skip <em>reasons</em> (in <code>skipped</code>, not errors): <code>generated, dependency, recording,
+or private deployment directory</code> · <code>credential or generated lock file</code> ·
+<code>private key or certificate material</code> · <code>larger than &lt;n&gt; bytes</code> ·
+<code>total source limit &lt;n&gt; bytes reached</code> · <code>binary content</code> ·
+<code>not valid UTF-8 text</code>. See <a href="/docs/sources/">sources</a>.</p>
+<h2 id="git-refusals">Git refusals</h2>
+<table>
+<thead>
+<tr>
+<th>Sentence</th>
+<th>Meaning / fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Git commit cannot be resolved: &lt;ref&gt;</code> †</td>
+<td><code>--base</code>/<code>--head</code> is not a commit in this repository; check the ref and <code>--repo</code></td>
+</tr>
+<tr>
+<td><code>Git diff cannot be read for &lt;base&gt;...&lt;head&gt;</code></td>
+<td>diff itself failed (shallow clone missing the merge base, corrupt repo)</td>
+</tr>
+<tr>
+<td><code>Git diff is &lt;n&gt; bytes, above --max-diff-bytes &lt;m&gt;; narrow or split the change rather than auditing a truncated diff</code> †</td>
+<td>deliberate refusal — a truncated diff would audit a change that did not happen. Audit smaller ranges, restrict sync <code>sources</code>, or raise the budget knowingly</td>
+</tr>
+<tr>
+<td><code>Diff byte limit must be a positive integer</code></td>
+<td>library-only: <code>checkDocumentation</code> called with a non-positive <code>maxDiffBytes</code> (the CLI validates <code>--max-diff-bytes</code> first)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="transport-and-brama-answers">Transport and Brama answers</h2>
+<p>From <code>src/brama.ts</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Sentence</th>
+<th>Meaning / fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fetch failed</code> †</td>
+<td>Node's own sentence for a network-level failure (refused connection, DNS); Brama never answered. Check <code>BRAMA_URL</code> and reachability</td>
+</tr>
+<tr>
+<td><code>Brama request timed out after &lt;n&gt;ms</code> †</td>
+<td>aborted at <code>--timeout-ms</code> (default <code>120000</code>)</td>
+</tr>
+<tr>
+<td><code>Brama returned HTTP &lt;status&gt;: &lt;detail&gt;</code> †</td>
+<td>Brama answered an error; <code>&lt;detail&gt;</code> is the server's own <code>error</code>/<code>error.message</code> or the first 1000 bytes of the body — <code>empty response</code> when there was none. 401/403 are credential scope; 5xx is Brama-side</td>
+</tr>
+<tr>
+<td><code>Brama returned no documentation content</code> †</td>
+<td>2xx with an empty or unrecognizable completion body</td>
+</tr>
+</tbody>
+</table>
+<h2 id="model-output-refusals">Model output refusals</h2>
+<p>The model's answer is validated, never trusted. From <code>src/writer.ts</code>
+(write/rewrite):</p>
+<ul>
+<li><code>Brama returned documentation that is too short</code> † — under 20 characters
+  after normalization</li>
+<li><code>Brama returned invalid NUL content</code></li>
+</ul>
+<p>From <code>src/checker.ts</code> (audit verdicts):</p>
+<ul>
+<li><code>Kronika returned invalid documentation-check JSON</code> † — the answer was not
+  parseable JSON (one surrounding code fence is tolerated)</li>
+<li><code>Kronika documentation check is not an object</code></li>
+<li><code>Kronika documentation check has no boolean passed field</code></li>
+<li><code>Kronika documentation check has no summary</code></li>
+<li><code>Kronika documentation check has no findings array</code></li>
+<li><code>Kronika documentation check contradicts its blocker findings</code> † —
+  <code>passed</code> disagreed with the presence of blockers</li>
+<li><code>Kronika finding &lt;i&gt; is not an object</code> / <code>has invalid severity</code> /
+  <code>has invalid code</code> / <code>has invalid document</code> / <code>has invalid sourcePaths</code> /
+  <code>has no message</code> / <code>has invalid requiredChange</code></li>
+</ul>
+<p>A retry is reasonable — these are usually one bad completion. Persistent
+verdict failures on the same change mean the model selector is too weak or
+the diff too large to reason over; try a stronger <code>--model</code>.</p>
+<h2 id="sync-fatal-sentences">Sync: fatal sentences</h2>
+<p>Manifest and state validation, fatal before any document is visited
+(all †, captured):</p>
+<ul>
+<li><code>Sync manifest is missing: &lt;path&gt;. Declare the maintained documents first.</code></li>
+<li><code>Sync manifest is not valid JSON: &lt;path&gt;</code></li>
+<li><code>Unsupported sync manifest schemaVersion in &lt;path&gt;</code></li>
+<li><code>Sync manifest declares no documents: &lt;path&gt;</code></li>
+<li><code>Sync manifest entry without an output path in &lt;path&gt;</code></li>
+<li><code>Sync manifest entry &lt;output&gt; declares no sources</code></li>
+<li><code>Sync state is not valid JSON: &lt;path&gt;. Fix or delete it to re-baseline.</code></li>
+<li><code>Unsupported sync state schemaVersion in &lt;path&gt;</code></li>
+</ul>
+<h2 id="sync-per-document-failed-outcomes">Sync: per-document <code>failed</code> outcomes</h2>
+<p>Not thrown — reported per document, exit <code>1</code>, <a href="/docs/concepts/baseline/">baseline</a>
+deliberately not advanced, next tick retries the same range:</p>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Meaning / fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>the recorded baseline &lt;sha12&gt; cannot be diffed against HEAD: &lt;git error&gt;. Delete this entry from the state file to re-baseline.</code> †</td>
+<td>history rewrite or corrupt entry; the remedy is in the sentence</td>
+</tr>
+<tr>
+<td><code>audit did not complete: &lt;message&gt;</code> †</td>
+<td>the check failed — <code>&lt;message&gt;</code> is any transport/Git/verdict sentence above (captured offline: <code>audit did not complete: fetch failed</code>)</td>
+</tr>
+<tr>
+<td><code>audit found blockers but the rewrite did not complete: &lt;message&gt;</code></td>
+<td>the check worked, the write failed; findings are in the outcome, nothing was written</td>
+</tr>
+</tbody>
+</table>
+<h2 id="docs-cli-site-pipeline">docs-cli (site pipeline)</h2>
+<p>The separate pipeline reports one JSON object and exits: <code>2</code> usage
+(<code>node src/run.mjs &lt;productRepo&gt; --sources &lt;file&gt; [--plan &lt;file&gt;] [--out &lt;dir&gt;]</code>),
+<code>69</code> model infrastructure down (<code>brama endpoint unreachable: &lt;url&gt;
+(&lt;detail&gt;)</code> — network failure or the resolver adapter answering 502/503/504),
+<code>1</code> any failing stage, <code>0</code> all green. An answering endpoint with another bad
+status is <code>brama answered HTTP &lt;status&gt;: &lt;body&gt;</code>; a shapeless answer is
+<code>brama answer had no choices[0].message.content</code>. See
+<a href="/docs/site-pipeline/">site-pipeline</a>.</p>
+<p>† captured by running the built CLI against a toy repository; the remainder
+quoted from <code>src/</code>.</p>
+      </article>
+      <nav class="page-turn" aria-label="Documentation pages"><a class="previous" href="/docs/sync/"><small>Previous</small><span>← The sync loop</span></a><a class="next" href="/docs/architecture/"><small>Next</small><span>Architecture →</span></a></nav>
+      <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>
+    </main>
+  </div>
+</body>
+</html>

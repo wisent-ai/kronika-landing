@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://kronika.wisent.com/</loc></url>
+  <url><loc>https://kronika.wisent.com/docs/</loc></url>
+  <url><loc>https://kronika.wisent.com/docs/quick-start/</loc></url>
+  <url><loc>https://kronika.wisent.com/docs/sources/</loc></url>
+  <url><loc>https://kronika.wisent.com/docs/configuration/</loc></url>
+  <url><loc>https://kronika.wisent.com/docs/cli/</loc></url>
+  <url><loc>https://kronika.wisent.com/docs/sync/</loc></url>
+  <url><loc>https://kronika.wisent.com/docs/runbook/</loc></url>
+  <url><loc>https://kronika.wisent.com/docs/architecture/</loc></url>
+  <url><loc>https://kronika.wisent.com/docs/library/</loc></url>
+  <url><loc>https://kronika.wisent.com/docs/site-pipeline/</loc></url>
+  <url><loc>https://kronika.wisent.com/docs/writing-standard/</loc></url>
+  <url><loc>https://kronika.wisent.com/docs/concepts/source-collection/</loc></url>
+  <url><loc>https://kronika.wisent.com/docs/concepts/check/</loc></url>
+  <url><loc>https://kronika.wisent.com/docs/concepts/audit/</loc></url>
+  <url><loc>https://kronika.wisent.com/docs/concepts/finding/</loc></url>
+  <url><loc>https://kronika.wisent.com/docs/concepts/blocker-vs-warning/</loc></url>
+  <url><loc>https://kronika.wisent.com/docs/concepts/manifest/</loc></url>
+  <url><loc>https://kronika.wisent.com/docs/concepts/state/</loc></url>
+  <url><loc>https://kronika.wisent.com/docs/concepts/baseline/</loc></url>
+  <url><loc>https://kronika.wisent.com/docs/concepts/drift/</loc></url>
+  <url><loc>https://kronika.wisent.com/docs/walkthroughs/check/</loc></url>
+  <url><loc>https://kronika.wisent.com/docs/walkthroughs/sync-cycle/</loc></url>
+  <url><loc>https://kronika.wisent.com/docs/examples/</loc></url>
+</urlset>

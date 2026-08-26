@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Library API — Kronika documentation</title>
+  <meta name="description" content="The npm package @wisent-ai/kronika exposes the same selection, generation, audit, and sync contract as the CLI, as a dependency-free ES module for Node.js 22+. The entry point is dist/src/in">
+  <link rel="canonical" href="https://kronika.wisent.com/docs/library/">
+  <meta name="theme-color" content="#10100f">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body class="docs-page">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header docs-header">
+    <a class="brand" href="/" aria-label="Kronika home"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4.5h14.5A3.5 3.5 0 0 1 25 8v19H10a4 4 0 0 1-4-4V5.5a1 1 0 0 1 1-1Z"/><path d="M10 27a4 4 0 0 1 4-4h11M11 10h9M11 15h7"/></svg><span>Kronika</span></a>
+    <nav aria-label="Primary navigation"><a class="selected" href="/docs/">Documentation</a><a href="https://github.com/wisent-ai/kronika">GitHub</a></nav>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="docs-sidebar">Browse docs</button>
+  </header>
+  <div class="docs-frame">
+    <aside class="docs-sidebar" id="docs-sidebar">
+      <label class="docs-filter"><span class="sr-only">Filter documentation</span><input type="search" placeholder="Filter topics" autocomplete="off" data-docs-filter></label>
+      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/">What is Kronika</a><a href="/docs/quick-start/">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/">CLI reference</a><a href="/docs/sync/">The sync loop</a><a href="/docs/runbook/">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/">Architecture</a><a href="/docs/library/" aria-current="page" class="active">Library API</a><a href="/docs/site-pipeline/">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section><section><h2>Concepts</h2><a href="/docs/concepts/source-collection/">Source collection</a><a href="/docs/concepts/check/">Check</a><a href="/docs/concepts/audit/">Audit</a><a href="/docs/concepts/finding/">Finding</a><a href="/docs/concepts/blocker-vs-warning/">Blocker vs warning</a><a href="/docs/concepts/manifest/">Sync manifest</a><a href="/docs/concepts/state/">Sync state</a><a href="/docs/concepts/baseline/">Baseline</a><a href="/docs/concepts/drift/">Drift</a></section><section><h2>Walkthroughs</h2><a href="/docs/walkthroughs/check/">Walkthrough: gating one change</a><a href="/docs/walkthroughs/sync-cycle/">Walkthrough: one full sync cycle</a><a href="/docs/examples/">Examples — kronika in practice</a></section></nav>
+      <p class="filter-empty" hidden>No matching topics.</p>
+    </aside>
+    <main id="content" class="docs-main">
+      <div class="breadcrumbs"><a href="/docs/">Docs</a><span aria-hidden="true">/</span><span>Library API</span></div>
+      <article class="prose">
+        <div class="article-kicker">Kronika documentation</div>
+        <h1>Library API</h1>
+        <p>The npm package <code>@wisent-ai/kronika</code> exposes the same selection, generation,
+audit, and sync contract as the CLI, as a dependency-free ES module for
+Node.js 22+. The entry point is <code>dist/src/index.js</code>; everything below is a
+named export of the package root.</p>
+<h2 id="the-completion-boundary">The completion boundary</h2>
+<p>All model access goes through one interface, so any client can substitute
+for Brama in tests or embeddings:</p>
+<pre><code class="language-ts">interface CompletionClient {
+  complete(request: {
+    messages: { role: &quot;system&quot; | &quot;user&quot; | &quot;assistant&quot;; content: string }[];
+    model: string;
+    maxTokens: number;
+  }): Promise&lt;{ content: string; model?: string }&gt;;
+}
+</code></pre>
+<ul>
+<li><code>BramaClient</code> — the production implementation. Constructor options:
+  <code>url</code>, <code>apiKey</code>, optional <code>agentId</code>/<code>authSecret</code> (both or neither),
+  <code>timeoutMs</code> (default <code>120000</code>), and <code>fetchImpl</code> to inject a fetch. The
+  request and header contract is in <a href="/docs/configuration/">configuration</a>.</li>
+<li><code>signedHeaders(body, agentId, authSecret, timestampSeconds?)</code> — the HMAC
+  header set (<code>x-agent-id</code>, <code>x-agent-timestamp</code>, <code>x-agent-signature</code>) for a
+  given JSON body, exported so other callers can sign identically.</li>
+</ul>
+<p>The seam is real, not theoretical: <code>checkDocumentation</code>,
+<code>writeDocumentation</code>, and <code>syncDocumentation</code> all take the client as their
+second argument, so a test double is one object:</p>
+<pre><code class="language-ts">import { checkDocumentation, type CompletionClient } from &quot;@wisent-ai/kronika&quot;;
+
+const canned: CompletionClient = {
+  async complete() {
+    return { content: JSON.stringify({ passed: true, summary: &quot;covered&quot;, findings: [] }) };
+  },
+};
+
+const audit = await checkDocumentation({
+  repo: &quot;/path/to/project&quot;,
+  output: &quot;docs/usage.md&quot;,
+  sources: [&quot;src&quot;],
+  base: &quot;origin/main&quot;,
+  head: &quot;HEAD&quot;,
+  model: &quot;any&quot;,
+  maxTokens: 8_000,
+  maxInputBytes: 200_000,
+  maxFileBytes: 64_000,
+  maxDiffBytes: 200_000,
+}, canned);
+</code></pre>
+<p>The verdict still passes through <code>parseDocumentationCheck</code> — a double that
+answers malformed JSON fails exactly like a misbehaving model
+(<a href="/docs/runbook/">runbook</a>).</p>
+<h2 id="selection">Selection</h2>
+<ul>
+<li><code>collectSources(options: SourceOptions): SourceCollection</code> — builds the
+  bounded source manifest; the rules are in <a href="/docs/sources/">sources</a>.
+  <code>SourceOptions</code> is <code>{ repo, sources?, output, maxInputBytes,
+  maxFileBytes }</code>; the result is <code>{ documents, skipped, totalBytes }</code>.
+  Non-positive budgets throw <code>Source byte limits must be positive</code> — a
+  library-only sentence, since the CLI validates its flags first.</li>
+</ul>
+<h2 id="generation">Generation</h2>
+<ul>
+<li><code>writeDocumentation(options: WriteDocumentationOptions, client):
+  Promise&lt;WriteDocumentationResult&gt;</code> — one completion over the selected
+  sources; with <code>apply: true</code> the output file is atomically replaced. The
+  result carries <code>content</code>, <code>outputPath</code>, <code>applied</code>, <code>model?</code>, <code>sources</code>,
+  and <code>skipped</code>.</li>
+<li><code>buildDocumentationMessages(options, collection): ChatMessage[]</code> — the
+  exact write prompt (system rules plus source payload), exported for
+  inspection or reuse.</li>
+</ul>
+<h2 id="audit">Audit</h2>
+<ul>
+<li><code>checkDocumentation(options: CheckDocumentationOptions, client):
+  Promise&lt;CheckDocumentationResult&gt;</code> — audits one <code>base</code>...<code>head</code> range;
+  the semantics are in <a href="/docs/cli/">cli</a>. <code>diffPaths</code> restricts the audited
+  diff to given pathspecs — sync passes each document's declared sources
+  here.</li>
+<li><code>buildDocumentationCheckMessages(options, collection, change):
+  ChatMessage[]</code> — the exact audit prompt.</li>
+<li><code>parseDocumentationCheck(content)</code> — the strict verdict parser: JSON only
+  (a surrounding code fence is tolerated), validated finding shape,
+  kebab-case codes, and a <code>passed</code> value that must equal "no blockers".</li>
+</ul>
+<h2 id="sync">Sync</h2>
+<ul>
+<li><code>syncDocumentation(options: SyncOptions, client): Promise&lt;SyncResult&gt;</code> —
+  one reconciliation tick over a manifest; the state machine is in
+  <a href="/docs/sync/">sync</a>. <code>SyncOptions</code> is <code>{ repo, manifestPath, statePath,
+  dryRun, defaults }</code>; the result is <code>{ headSha, outcomes, stateWritten }</code>.
+  Committing and pushing are CLI concerns, not library ones. Manifest and
+  state validation sentences are in the <a href="/docs/runbook/#sync-fatal-sentences">runbook</a>.</li>
+<li><code>loadSyncManifest(path): SyncManifest</code> — reads and validates a manifest.</li>
+<li><code>SYNC_MANIFEST_FILE</code>, <code>SYNC_STATE_FILE</code> — the default file names,
+  <code>kronika.sync.json</code> and <code>kronika.sync-state.json</code>.</li>
+</ul>
+<h2 id="types">Types</h2>
+<p>All contract types are exported: <code>ChatMessage</code>, <code>CompletionClient</code>,
+<code>CompletionRequest</code>, <code>CompletionResult</code>, <code>SourceOptions</code>, <code>SourceDocument</code>,
+<code>SkippedSource</code>, <code>SourceCollection</code>, <code>DocumentationFinding</code>,
+<code>CheckDocumentationOptions</code>, <code>CheckDocumentationResult</code>,
+<code>WriteDocumentationOptions</code>, <code>WriteDocumentationResult</code>, <code>SyncDefaults</code>,
+<code>SyncDocument</code>, <code>SyncManifest</code>, <code>SyncOptions</code>, <code>SyncOutcome</code>, <code>SyncResult</code>,
+and <code>SyncState</code>.</p>
+<h2 id="example">Example</h2>
+<pre><code class="language-ts">import { BramaClient, writeDocumentation } from &quot;@wisent-ai/kronika&quot;;
+
+const client = new BramaClient({
+  url: process.env.BRAMA_URL!,
+  apiKey: process.env.BRAMA_API_KEY!,
+});
+
+const result = await writeDocumentation({
+  repo: &quot;/path/to/project&quot;,
+  output: &quot;docs/architecture.md&quot;,
+  sources: [&quot;src&quot;, &quot;README.md&quot;],
+  instruction: &quot;Document components, request flow, and failure modes.&quot;,
+  model: &quot;any&quot;,
+  maxInputBytes: 200_000,
+  maxFileBytes: 64_000,
+  maxTokens: 8_000,
+  apply: false,
+}, client);
+
+process.stdout.write(result.content);
+</code></pre>
+      </article>
+      <nav class="page-turn" aria-label="Documentation pages"><a class="previous" href="/docs/architecture/"><small>Previous</small><span>← Architecture</span></a><a class="next" href="/docs/site-pipeline/"><small>Next</small><span>Site pipeline →</span></a></nav>
+      <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>
+    </main>
+  </div>
+</body>
+</html>
