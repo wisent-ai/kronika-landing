@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>kronika sources — Kronika documentation</title>
+  <meta name="description" content="Reference for kronika sources, the safe source-manifest command.">
+  <link rel="canonical" href="https://kronika.wisent.com/docs/cli/sources/">
+  <meta name="theme-color" content="#10100f">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body class="docs-page">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header docs-header">
+    <a class="brand" href="/" aria-label="Kronika home"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4.5h14.5A3.5 3.5 0 0 1 25 8v19H10a4 4 0 0 1-4-4V5.5a1 1 0 0 1 1-1Z"/><path d="M10 27a4 4 0 0 1 4-4h11M11 10h9M11 15h7"/></svg><span>Kronika</span></a>
+    <nav aria-label="Primary navigation"><a class="selected" href="/docs/">Documentation</a><a href="https://github.com/wisent-ai/kronika">GitHub</a></nav>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="docs-sidebar">Browse docs</button>
+  </header>
+  <div class="docs-frame">
+    <aside class="docs-sidebar" id="docs-sidebar">
+      <label class="docs-filter"><span class="sr-only">Filter documentation</span><input type="search" placeholder="Filter topics" autocomplete="off" data-docs-filter></label>
+      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/">What is Kronika</a><a href="/docs/quick-start/">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/" aria-current="page" class="active">CLI reference</a><a href="/docs/sync/">The sync loop</a><a href="/docs/runbook/">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/">Architecture</a><a href="/docs/library/">Library API</a><a href="/docs/site-pipeline/">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section><section><h2>Concepts</h2><a href="/docs/concepts/source-collection/">Source collection</a><a href="/docs/concepts/check/">Check</a><a href="/docs/concepts/audit/">Audit</a><a href="/docs/concepts/finding/">Finding</a><a href="/docs/concepts/blocker-vs-warning/">Blocker vs warning</a><a href="/docs/concepts/manifest/">Sync manifest</a><a href="/docs/concepts/state/">Sync state</a><a href="/docs/concepts/baseline/">Baseline</a><a href="/docs/concepts/drift/">Drift</a></section><section><h2>Walkthroughs</h2><a href="/docs/walkthroughs/check/">Walkthrough: gating one change</a><a href="/docs/walkthroughs/sync-cycle/">Walkthrough: one full sync cycle</a><a href="/docs/examples/">Examples — kronika in practice</a></section></nav>
+      <p class="filter-empty" hidden>No matching topics.</p>
+    </aside>
+    <main id="content" class="docs-main">
+      <div class="breadcrumbs"><a href="/docs/">Docs</a><span aria-hidden="true">/</span><a href="/docs/cli/">CLI</a><span aria-hidden="true">/</span><span>sources</span></div>
+      <article class="prose">
+        <div class="article-kicker">Kronika CLI command</div>
+        <h1><code>kronika sources</code></h1>
+        <p>Collect the repository files Kronika may send to Brama and print the safe source manifest without making a model request or changing repository state.</p>
+        <h2 id="invocation">Invocation</h2>
+<pre><code class="language-text">kronika sources [options]
+</code></pre>
+        <p>There are no required options or environment variables. The repository defaults to the current directory and the target document defaults to <code>README.md</code>.</p>
+        <h2 id="inputs-and-options">Inputs and options</h2>
+        <table><thead><tr><th>Option</th><th>Default</th><th>Effect</th></tr></thead><tbody>
+          <tr><td><code>--repo &lt;path&gt;</code></td><td>current directory</td><td>Repository root used for containment and discovery.</td></tr>
+          <tr><td><code>--output &lt;path&gt;</code></td><td><code>README.md</code></td><td>Prioritizes the target document in the manifest; it must remain inside the repository.</td></tr>
+          <tr><td><code>--source &lt;path&gt;</code></td><td>automatic discovery</td><td>Selects an explicit file or directory. Repeat the option for multiple sources.</td></tr>
+          <tr><td><code>--max-input-bytes &lt;n&gt;</code></td><td><code>200000</code></td><td>Caps all selected source bytes.</td></tr>
+          <tr><td><code>--max-file-bytes &lt;n&gt;</code></td><td><code>64000</code></td><td>Caps each selected file.</td></tr>
+        </tbody></table>
+        <p>Automatic discovery uses Git's tracked and unignored files when available, otherwise it walks the repository. Explicit directories are walked. Credentials, keys, generated/private directories, oversized files, binary content, invalid UTF-8, and files beyond the total budget are skipped and reported with their reason.</p>
+        <h2 id="output-and-state">Output and state</h2>
+        <p>Stdout is one JSON object with <code>repo</code>, <code>output</code>, <code>totalBytes</code>, a <code>sources</code> array of path and byte count, and a <code>skipped</code> array of path and reason. The command does not read Brama configuration, call Brama, or write files. Successful collection exits <code>0</code>.</p>
+        <h2 id="refusals">Exact refusals</h2>
+        <ul>
+          <li><code>Repository is not a directory: &lt;resolved-path&gt;</code></li>
+          <li><code>Source is outside the repository: &lt;selection&gt;</code></li>
+          <li><code>Source does not exist: &lt;selection&gt;</code></li>
+          <li><code>Symbolic-link sources are not allowed: &lt;selection&gt;</code></li>
+          <li><code>Output is outside the repository: &lt;output&gt;</code></li>
+          <li><code>--max-input-bytes must be a positive integer</code> or <code>--max-file-bytes must be a positive integer</code></li>
+        </ul>
+        <p>Any refusal is written to stderr as <code>kronika: &lt;message&gt;</code> and exits <code>1</code>. A missing value is <code>&lt;flag&gt; requires a value</code>; an unknown option is <code>Unknown option: &lt;flag&gt;</code>.</p>
+      </article>
+      <nav class="page-turn" aria-label="CLI command pages"><a class="previous" href="/docs/cli/"><small>Previous</small><span>← CLI reference</span></a><a class="next" href="/docs/cli/check/"><small>Next</small><span>kronika check →</span></a></nav>
+      <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>
+    </main>
+  </div>
+</body>
+</html>

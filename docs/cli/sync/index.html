@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>kronika sync — Kronika documentation</title>
+  <meta name="description" content="Reference for kronika sync, the manifest-driven documentation reconciliation command.">
+  <link rel="canonical" href="https://kronika.wisent.com/docs/cli/sync/">
+  <meta name="theme-color" content="#10100f">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body class="docs-page">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header docs-header">
+    <a class="brand" href="/" aria-label="Kronika home"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4.5h14.5A3.5 3.5 0 0 1 25 8v19H10a4 4 0 0 1-4-4V5.5a1 1 0 0 1 1-1Z"/><path d="M10 27a4 4 0 0 1 4-4h11M11 10h9M11 15h7"/></svg><span>Kronika</span></a>
+    <nav aria-label="Primary navigation"><a class="selected" href="/docs/">Documentation</a><a href="https://github.com/wisent-ai/kronika">GitHub</a></nav>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="docs-sidebar">Browse docs</button>
+  </header>
+  <div class="docs-frame">
+    <aside class="docs-sidebar" id="docs-sidebar">
+      <label class="docs-filter"><span class="sr-only">Filter documentation</span><input type="search" placeholder="Filter topics" autocomplete="off" data-docs-filter></label>
+      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/">What is Kronika</a><a href="/docs/quick-start/">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/" aria-current="page" class="active">CLI reference</a><a href="/docs/sync/">The sync loop</a><a href="/docs/runbook/">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/">Architecture</a><a href="/docs/library/">Library API</a><a href="/docs/site-pipeline/">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section><section><h2>Concepts</h2><a href="/docs/concepts/source-collection/">Source collection</a><a href="/docs/concepts/check/">Check</a><a href="/docs/concepts/audit/">Audit</a><a href="/docs/concepts/finding/">Finding</a><a href="/docs/concepts/blocker-vs-warning/">Blocker vs warning</a><a href="/docs/concepts/manifest/">Sync manifest</a><a href="/docs/concepts/state/">Sync state</a><a href="/docs/concepts/baseline/">Baseline</a><a href="/docs/concepts/drift/">Drift</a></section><section><h2>Walkthroughs</h2><a href="/docs/walkthroughs/check/">Walkthrough: gating one change</a><a href="/docs/walkthroughs/sync-cycle/">Walkthrough: one full sync cycle</a><a href="/docs/examples/">Examples — kronika in practice</a></section></nav>
+      <p class="filter-empty" hidden>No matching topics.</p>
+    </aside>
+    <main id="content" class="docs-main">
+      <div class="breadcrumbs"><a href="/docs/">Docs</a><span aria-hidden="true">/</span><a href="/docs/cli/">CLI</a><span aria-hidden="true">/</span><span>sync</span></div>
+      <article class="prose">
+        <div class="article-kicker">Kronika CLI command</div>
+        <h1><code>kronika sync</code></h1>
+        <p>Reconcile every manifest-declared document with its repository evidence: establish baselines, audit drifted documents, rewrite only audited defects, and record the reconciled commit.</p>
+        <h2 id="invocation">Invocation</h2>
+<pre><code class="language-text">kronika sync [options]
+</code></pre>
+        <p>A schema-version 1 sync manifest is required at <code>kronika.sync.json</code> by default. Each document entry must have a non-empty <code>output</code> and non-empty <code>sources</code> array. <code>BRAMA_URL</code> (or <code>MODEL_ROUTER_URL</code>) and <code>BRAMA_API_KEY</code> (or <code>MODEL_ROUTER_TOKEN</code>) are required even when the current tick needs no model call.</p>
+        <h2 id="inputs-and-options">Inputs and options</h2>
+        <table><thead><tr><th>Option</th><th>Default</th><th>Effect</th></tr></thead><tbody>
+          <tr><td><code>--repo &lt;path&gt;</code></td><td>current directory</td><td>Git repository containing manifest, state, sources, and outputs.</td></tr>
+          <tr><td><code>--manifest &lt;path&gt;</code></td><td><code>kronika.sync.json</code></td><td>Sync manifest inside the repository.</td></tr>
+          <tr><td><code>--state &lt;path&gt;</code></td><td><code>kronika.sync-state.json</code></td><td>Persistent reconciliation baselines.</td></tr>
+          <tr><td><code>--model &lt;selector&gt;</code></td><td><code>KRONIKA_MODEL</code> or <code>any</code></td><td>Default Brama model unless a document overrides it.</td></tr>
+          <tr><td><code>--max-input-bytes &lt;n&gt;</code></td><td><code>200000</code></td><td>Default total source budget.</td></tr>
+          <tr><td><code>--max-file-bytes &lt;n&gt;</code></td><td><code>64000</code></td><td>Default per-file source limit.</td></tr>
+          <tr><td><code>--max-diff-bytes &lt;n&gt;</code></td><td><code>200000</code></td><td>Default complete-diff budget.</td></tr>
+          <tr><td><code>--max-tokens &lt;n&gt;</code></td><td><code>8000</code></td><td>Default completion token budget.</td></tr>
+          <tr><td><code>--timeout-ms &lt;n&gt;</code></td><td><code>120000</code></td><td>Brama request timeout.</td></tr>
+          <tr><td><code>--dry-run</code></td><td>off</td><td>Reports and audits but writes no document or state, and never commits.</td></tr>
+          <tr><td><code>--commit</code></td><td>off</td><td>Stages rewritten documents and state, then creates a sync commit when something changed.</td></tr>
+          <tr><td><code>--push</code></td><td>off</td><td>Runs <code>git push</code> after a sync commit; by itself it does not push.</td></tr>
+          <tr><td><code>--json</code></td><td>off</td><td>Emits the machine-readable tick result.</td></tr>
+        </tbody></table>
+        <h2 id="output-and-state">Output and state</h2>
+        <p>Text starts with <code>Kronika sync at &lt;sha12&gt;</code>, with <code>(dry run)</code> when applicable, then reports one outcome per document: <code>baseline</code>, <code>current</code>, <code>advanced</code>, <code>checked-current</code>, <code>rewritten</code>, or <code>failed</code>. JSON includes <code>headSha</code>, <code>dryRun</code>, <code>committed</code>, <code>stateWritten</code>, and complete outcomes with changed paths and findings.</p>
+        <p>A first non-dry run records a baseline and generates nothing. An unchanged baseline is current. If no declared evidence changed, the baseline advances without Brama. Changed evidence is audited; a passing audit advances state without prose churn, while blockers cause an atomic rewrite using those findings as the correction brief. State is written only when a baseline advances. Any <code>failed</code> outcome makes the process exit <code>1</code>; otherwise it exits <code>0</code>.</p>
+        <p>With <code>--commit</code>, sync commits rewritten outputs and state as <code>kronika sync: reconcile &lt;files&gt;</code>, or state alone as <code>kronika sync: advance documentation baselines</code>. <code>--push</code> pushes that commit.</p>
+        <h2 id="refusals">Exact refusals and failed outcomes</h2>
+        <ul>
+          <li><code>Sync manifest is missing: &lt;path&gt;. Declare the maintained documents first.</code></li>
+          <li><code>Sync manifest is not valid JSON: &lt;path&gt;</code> or <code>Unsupported sync manifest schemaVersion in &lt;path&gt;</code></li>
+          <li><code>Sync manifest declares no documents: &lt;path&gt;</code></li>
+          <li><code>Sync manifest entry without an output path in &lt;path&gt;</code> or <code>Sync manifest entry &lt;output&gt; declares no sources</code></li>
+          <li><code>Sync state is not valid JSON: &lt;path&gt;. Fix or delete it to re-baseline.</code> or <code>Unsupported sync state schemaVersion in &lt;path&gt;</code></li>
+          <li><code>BRAMA_URL or MODEL_ROUTER_URL is required</code> and <code>BRAMA_API_KEY or MODEL_ROUTER_TOKEN is required</code></li>
+        </ul>
+        <p>A baseline that cannot be diffed yields a <code>failed</code> outcome instructing the operator to delete that state entry to re-baseline. An incomplete audit yields <code>audit did not complete: &lt;message&gt;</code>; a blocked audit whose rewrite fails yields <code>audit found blockers but the rewrite did not complete: &lt;message&gt;</code>. Git commit or push failures are process errors. See <a href="/docs/sync/">the sync loop</a> for the complete state machine.</p>
+      </article>
+      <nav class="page-turn" aria-label="CLI command pages"><a class="previous" href="/docs/cli/write/"><small>Previous</small><span>← kronika write</span></a><a class="next" href="/docs/cli/"><small>CLI index</small><span>All commands →</span></a></nav>
+      <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>
+    </main>
+  </div>
+</body>
+</html>

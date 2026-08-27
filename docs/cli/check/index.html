@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>kronika check — Kronika documentation</title>
+  <meta name="description" content="Reference for kronika check, the documentation consistency gate for one Git change.">
+  <link rel="canonical" href="https://kronika.wisent.com/docs/cli/check/">
+  <meta name="theme-color" content="#10100f">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body class="docs-page">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header docs-header">
+    <a class="brand" href="/" aria-label="Kronika home"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4.5h14.5A3.5 3.5 0 0 1 25 8v19H10a4 4 0 0 1-4-4V5.5a1 1 0 0 1 1-1Z"/><path d="M10 27a4 4 0 0 1 4-4h11M11 10h9M11 15h7"/></svg><span>Kronika</span></a>
+    <nav aria-label="Primary navigation"><a class="selected" href="/docs/">Documentation</a><a href="https://github.com/wisent-ai/kronika">GitHub</a></nav>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="docs-sidebar">Browse docs</button>
+  </header>
+  <div class="docs-frame">
+    <aside class="docs-sidebar" id="docs-sidebar">
+      <label class="docs-filter"><span class="sr-only">Filter documentation</span><input type="search" placeholder="Filter topics" autocomplete="off" data-docs-filter></label>
+      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/">What is Kronika</a><a href="/docs/quick-start/">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/" aria-current="page" class="active">CLI reference</a><a href="/docs/sync/">The sync loop</a><a href="/docs/runbook/">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/">Architecture</a><a href="/docs/library/">Library API</a><a href="/docs/site-pipeline/">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section><section><h2>Concepts</h2><a href="/docs/concepts/source-collection/">Source collection</a><a href="/docs/concepts/check/">Check</a><a href="/docs/concepts/audit/">Audit</a><a href="/docs/concepts/finding/">Finding</a><a href="/docs/concepts/blocker-vs-warning/">Blocker vs warning</a><a href="/docs/concepts/manifest/">Sync manifest</a><a href="/docs/concepts/state/">Sync state</a><a href="/docs/concepts/baseline/">Baseline</a><a href="/docs/concepts/drift/">Drift</a></section><section><h2>Walkthroughs</h2><a href="/docs/walkthroughs/check/">Walkthrough: gating one change</a><a href="/docs/walkthroughs/sync-cycle/">Walkthrough: one full sync cycle</a><a href="/docs/examples/">Examples — kronika in practice</a></section></nav>
+      <p class="filter-empty" hidden>No matching topics.</p>
+    </aside>
+    <main id="content" class="docs-main">
+      <div class="breadcrumbs"><a href="/docs/">Docs</a><span aria-hidden="true">/</span><a href="/docs/cli/">CLI</a><span aria-hidden="true">/</span><span>check</span></div>
+      <article class="prose">
+        <div class="article-kicker">Kronika CLI command</div>
+        <h1><code>kronika check</code></h1>
+        <p>Audit one exact Git change against the current documentation through Brama. The command is a fail-closed documentation consistency gate.</p>
+        <h2 id="invocation">Invocation</h2>
+<pre><code class="language-text">kronika check --base &lt;ref&gt; [options]
+</code></pre>
+        <p><code>--base &lt;ref&gt;</code> is required. <code>BRAMA_URL</code> (or <code>MODEL_ROUTER_URL</code>) and <code>BRAMA_API_KEY</code> (or <code>MODEL_ROUTER_TOKEN</code>) are also required. The repository must be a Git repository with both refs resolvable as commits.</p>
+        <h2 id="inputs-and-options">Inputs and options</h2>
+        <table><thead><tr><th>Option</th><th>Default</th><th>Effect</th></tr></thead><tbody>
+          <tr><td><code>--base &lt;ref&gt;</code></td><td>required</td><td>Base commit of the three-dot Git range.</td></tr>
+          <tr><td><code>--head &lt;ref&gt;</code></td><td><code>HEAD</code></td><td>Head commit of the audited range.</td></tr>
+          <tr><td><code>--repo &lt;path&gt;</code></td><td>current directory</td><td>Repository to audit.</td></tr>
+          <tr><td><code>--output &lt;path&gt;</code></td><td><code>README.md</code></td><td>Documentation target considered by source collection.</td></tr>
+          <tr><td><code>--source &lt;path&gt;</code></td><td>automatic discovery</td><td>Explicit audit evidence; repeatable.</td></tr>
+          <tr><td><code>--instruction &lt;text&gt;</code></td><td>standard completeness audit</td><td>Additional documentation goal sent with the exact change.</td></tr>
+          <tr><td><code>--model &lt;selector&gt;</code></td><td><code>KRONIKA_MODEL</code> or <code>any</code></td><td>Brama model selector.</td></tr>
+          <tr><td><code>--max-input-bytes &lt;n&gt;</code></td><td><code>200000</code></td><td>Total source budget.</td></tr>
+          <tr><td><code>--max-file-bytes &lt;n&gt;</code></td><td><code>64000</code></td><td>Per-file source limit.</td></tr>
+          <tr><td><code>--max-diff-bytes &lt;n&gt;</code></td><td><code>200000</code></td><td>Maximum complete diff size; a larger diff is refused, never truncated.</td></tr>
+          <tr><td><code>--max-tokens &lt;n&gt;</code></td><td><code>8000</code></td><td>Completion token budget.</td></tr>
+          <tr><td><code>--timeout-ms &lt;n&gt;</code></td><td><code>120000</code></td><td>Brama request timeout.</td></tr>
+          <tr><td><code>--json</code></td><td>off</td><td>Emits the machine-readable result.</td></tr>
+        </tbody></table>
+        <h2 id="output-and-state">Output and state</h2>
+        <p>Kronika resolves both refs, reads the <code>base...head</code> diff with rename detection and 40 lines of context, collects current safe sources, and asks Brama for a strict verdict. Text output starts with <code>Kronika documentation check: PASSED</code> or <code>BLOCKED</code>, followed by the summary and findings. JSON output contains <code>passed</code>, <code>summary</code>, <code>findings</code>, model, resolved SHAs, changed paths, diff bytes, source count, and skipped sources.</p>
+        <p>The command writes no repository state. It exits <code>0</code> exactly when there are no blocker findings; warnings do not block. It exits <code>1</code> for a blocker or any operational/validation failure.</p>
+        <h2 id="refusals">Exact refusals</h2>
+        <ul>
+          <li><code>check requires --base &lt;ref&gt;</code></li>
+          <li><code>Git commit cannot be resolved: &lt;ref&gt;</code></li>
+          <li><code>Git diff cannot be read for &lt;base-sha&gt;...&lt;head-sha&gt;</code></li>
+          <li><code>Git diff is &lt;n&gt; bytes, above --max-diff-bytes &lt;limit&gt;; narrow or split the change rather than auditing a truncated diff</code></li>
+          <li><code>BRAMA_URL or MODEL_ROUTER_URL is required</code> and <code>BRAMA_API_KEY or MODEL_ROUTER_TOKEN is required</code></li>
+          <li>Malformed model results are refused, beginning with <code>Kronika returned invalid documentation-check JSON</code>; a verdict inconsistent with blocker findings is <code>Kronika documentation check contradicts its blocker findings</code>.</li>
+        </ul>
+        <p>Source containment, symlink, existence, UTF-8, and byte-budget rules are the same as <a href="/docs/cli/sources/"><code>kronika sources</code></a>. Parser and runtime errors are written as <code>kronika: &lt;message&gt;</code> to stderr.</p>
+      </article>
+      <nav class="page-turn" aria-label="CLI command pages"><a class="previous" href="/docs/cli/sources/"><small>Previous</small><span>← kronika sources</span></a><a class="next" href="/docs/cli/write/"><small>Next</small><span>kronika write →</span></a></nav>
+      <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>
+    </main>
+  </div>
+</body>
+</html>

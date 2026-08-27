@@ -35,6 +35,15 @@ kronika check --base &lt;ref&gt; [options]
 kronika write [options]
 kronika sync [options]
 </code></pre>
+<nav aria-label="Kronika CLI command tree">
+  <h2>Command pages</h2>
+  <ul>
+    <li><a href="/docs/cli/sources/"><code>kronika sources</code></a> — inspect the safe source manifest</li>
+    <li><a href="/docs/cli/check/"><code>kronika check</code></a> — gate one exact Git change</li>
+    <li><a href="/docs/cli/write/"><code>kronika write</code></a> — generate or apply one document</li>
+    <li><a href="/docs/cli/sync/"><code>kronika sync</code></a> — reconcile manifest-declared documents</li>
+  </ul>
+</nav>
 <p><code>kronika</code> with no arguments, <code>help</code>, <code>-h</code>, or <code>--help</code> prints usage. An
 unknown command or option is an error. Every error is written to stderr as
 <code>kronika: &lt;message&gt;</code> with exit status <code>1</code>; the complete sentence inventory,
