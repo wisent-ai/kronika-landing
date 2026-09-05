@@ -29,11 +29,12 @@
       <article class="prose">
         <div class="article-kicker">Kronika documentation</div>
         <h1>Quick start</h1>
-        <p>How do you go from a clone to a reconciled document? This page is the one
-happy path: build the CLI, inspect the evidence boundary without any model
-call, configure Brama, audit one change, preview one document, and turn on
-the sync loop. Everything else — the full flag surface, the selection rules,
-the loop's exact state machine — lives in <a href="/docs/cli/">cli</a>,
+        <p>How do you go from a repository with existing documentation to a
+reconciled workspace? This page is the one happy path: build the CLI, adopt
+the existing Markdown without generating it, inspect the evidence boundary,
+configure Brama, audit one change, preview one document, and turn on the sync
+loop. Everything else — the full flag surface, the selection rules, and the
+loop's exact state machine — lives in <a href="/docs/cli/">cli</a>,
 <a href="/docs/sources/">sources</a>, and <a href="/docs/sync/">sync</a>.</p>
 <h2 id="build-the-cli">Build the CLI</h2>
 <p>Prerequisites: Git, Node.js 22 or newer, npm.</p>
@@ -46,6 +47,18 @@ npm link
 <p><code>npm run build</code> compiles TypeScript into <code>dist/</code>; the <code>kronika</code> binary is
 <code>dist/src/cli.js</code>. <code>npm link</code> puts <code>kronika</code> on your PATH; without it, run
 <code>node dist/src/cli.js</code> directly. The package has no runtime dependencies.</p>
+<h2 id="adopt-the-existing-documentation">Adopt the existing documentation</h2>
+<pre><code class="language-bash">kronika init --repo /path/to/project
+</code></pre>
+<p>Without explicit <code>--docs</code>, init selects an existing root
+<code>README.md</code> and Markdown beneath <code>docs/</code>. It validates the
+whole selection and atomically writes only <code>kronika.sync.json</code>. It
+does not generate, copy, or rewrite a document, execute repository commands,
+or call Brama. Repeat <code>--docs</code> and <code>--source</code> to declare
+exact document and evidence paths. An identical manifest is unchanged; a
+different retained manifest is reported as a conflict and preserved unless
+<code>--replace</code> is explicit. See
+<a href="/docs/cli/init/"><code>kronika init</code></a>.</p>
 <h2 id="inspect-the-evidence-boundary">Inspect the evidence boundary</h2>
 <pre><code class="language-bash">kronika sources --repo /path/to/project
 </code></pre>
@@ -104,8 +117,9 @@ change; exit <code>1</code> means at least one blocker finding names a concrete 
 changes nothing. Add <code>--apply</code> only after reviewing the preview: it
 atomically replaces the output file, which must stay inside the repository.</p>
 <h2 id="turn-on-the-sync-loop">Turn on the sync loop</h2>
-<p>Declare the maintained documents in <code>kronika.sync.json</code> at the repository
-root:</p>
+<p>The earlier <code>kronika init</code> created
+<code>kronika.sync.json</code> at the repository root. Review the imported
+declarations before the first sync; its established shape is:</p>
 <pre><code class="language-json">{
   &quot;schemaVersion&quot;: 1,
   &quot;documents&quot;: [

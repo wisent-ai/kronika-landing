@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>kronika init — Kronika documentation</title>
+  <meta name="description" content="Reference for adopting existing repository documentation into Kronika's canonical sync manifest.">
+  <link rel="canonical" href="https://kronika.wisent.com/docs/cli/init/">
+  <meta name="theme-color" content="#10100f">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body class="docs-page">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header docs-header">
+    <a class="brand" href="/" aria-label="Kronika home"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4.5h14.5A3.5 3.5 0 0 1 25 8v19H10a4 4 0 0 1-4-4V5.5a1 1 0 0 1 1-1Z"/><path d="M10 27a4 4 0 0 1 4-4h11M11 10h9M11 15h7"/></svg><span>Kronika</span></a>
+    <nav aria-label="Primary navigation"><a class="selected" href="/docs/">Documentation</a><a href="https://github.com/wisent-ai/kronika">GitHub</a></nav>
+  </header>
+  <div class="docs-frame">
+    <aside class="docs-sidebar"><nav aria-label="Documentation navigation"><section><h2>Start here</h2><a href="/docs/">What is Kronika</a><a href="/docs/quick-start/">Quick start</a></section><section><h2>CLI reference</h2><a href="/docs/cli/">Command tree</a><a class="active" aria-current="page" href="/docs/cli/init/">kronika init</a><a href="/docs/cli/sources/">kronika sources</a><a href="/docs/cli/check/">kronika check</a><a href="/docs/cli/write/">kronika write</a><a href="/docs/cli/sync/">kronika sync</a></section></nav></aside>
+    <main id="content" class="docs-main">
+      <div class="breadcrumbs"><a href="/docs/">Docs</a><span aria-hidden="true">/</span><a href="/docs/cli/">CLI</a><span aria-hidden="true">/</span><span>init</span></div>
+      <article class="prose">
+        <div class="article-kicker">Kronika CLI command</div>
+        <h1><code>kronika init</code></h1>
+        <p>Adopt Markdown that already exists in a repository into the exact <code>kronika.sync.json</code> project format consumed by <code>kronika sync</code>. This command does not generate, copy, or rewrite documentation and does not call Brama or execute repository commands.</p>
+        <h2 id="invocation">Invocation</h2>
+        <pre><code class="language-text">kronika init [--repo &lt;path&gt;] [--docs &lt;path&gt; ...] [--source &lt;path&gt; ...]
+             [--manifest &lt;path&gt;] [--instruction &lt;text&gt;] [--replace]</code></pre>
+        <h2 id="accepted-input">Accepted input</h2>
+        <p>The repository defaults to the current directory. With no <code>--docs</code>, init selects an existing root <code>README.md</code> and every Markdown file beneath an existing <code>docs/</code> directory. Repeat <code>--docs</code> to select exact Markdown files or directories instead. Non-Markdown file selections, symbolic links, missing paths, and paths outside the repository are rejected.</p>
+        <p>Every imported document receives the repeated <code>--source</code> paths as its evidence declaration. With no explicit source, the established manifest value is <code>.</code>. Sources must exist inside the repository and cannot be symbolic links. <code>--instruction</code> supplies one standing instruction for every imported document; otherwise init records its built-in maintenance instruction without changing any document.</p>
+        <h2 id="state-and-downstream-use">State and downstream use</h2>
+        <p>The only possible mutation is one atomic write of the schema-version-1 manifest selected by <code>--manifest</code>, default <code>kronika.sync.json</code>. That manifest contains each existing document as <code>output</code>, its exact evidence paths as <code>sources</code>, and its standing <code>instruction</code>. A later <code>kronika sync</code> loads this same file; no second import store exists.</p>
+        <h2 id="duplicates-conflicts-and-failures">Duplicates, conflicts, and failures</h2>
+        <ul>
+          <li>An identical retained manifest returns <code>status: unchanged</code> and lists every document in <code>unchanged</code>.</li>
+          <li>A different retained manifest returns <code>status: conflicting</code>, exits 1, and leaves that manifest untouched.</li>
+          <li><code>--replace</code> is the explicit instruction to atomically replace a conflicting manifest; unrelated repository files remain untouched.</li>
+          <li>Invalid JSON in an existing manifest, an empty selection, and every invalid or escaping path return <code>status: rejected</code>, exit 1, and write nothing.</li>
+          <li>Successful output lists <code>imported</code>, <code>unchanged</code>, <code>conflicting</code>, and <code>rejected</code> separately. It contains paths and reasons, never document bodies.</li>
+        </ul>
+        <h2 id="first-use">First use and replay</h2>
+        <p><code>kronika onboarding</code> leads to this command. Onboarding completes only after init writes a valid manifest or accepts an identical retained one. <code>kronika onboarding --reset</code> replays the journey; repeating init is idempotent and completes the new attempt.</p>
+      </article>
+      <nav class="page-turn" aria-label="CLI command pages"><a class="previous" href="/docs/cli/"><small>Previous</small><span>← CLI reference</span></a><a class="next" href="/docs/cli/sources/"><small>Next</small><span>kronika sources →</span></a></nav>
+      <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>
+    </main>
+  </div>
+</body>
+</html>

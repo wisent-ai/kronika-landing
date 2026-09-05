@@ -36,6 +36,17 @@ admissible evidence. The whole product is three moving parts: an evidence
 boundary that selects what the model may see, one bounded Brama call that
 writes or judges, and a sync loop that remembers where documentation and
 source last agreed.</p>
+<h2 id="existing-documentation-becomes-the-project">Existing documentation becomes the project</h2>
+<p><code>kronika init</code> adopts Markdown already present in
+<code>README.md</code>, <code>docs/</code>, or exact <code>--docs</code>
+selections into the established <code>kronika.sync.json</code> project
+manifest. It validates every document and evidence path before one atomic
+manifest write. It does not generate or modify documentation, execute a
+repository command, or call Brama. An identical setup is unchanged; a
+different retained manifest is a conflict unless <code>--replace</code> is
+explicit. The imported manifest is the same state boundary
+<code>kronika sync</code> consumes. Details:
+<a href="/docs/cli/init/"><code>kronika init</code></a>.</p>
 <h2 id="the-evidence-boundary-selects">The evidence boundary selects</h2>
 <p>Before any model call, Kronika builds an explicit source manifest. Discovery
 is Git-aware — <code>git ls-files --cached --others --exclude-standard</code> — with a
@@ -89,7 +100,11 @@ source or output. The repository also ships a separate documentation-site
 pipeline (<code>docs-cli</code>) that authors a typed content plan and gates it with
 mechanical validators; that is a distinct subsystem, described in
 <a href="/docs/site-pipeline/">site-pipeline</a>.</p>
-<h2 id="the-first-three-commands">The first three commands</h2>
+<h2 id="the-first-four-commands">The first four commands</h2>
+<pre><code class="language-bash">kronika init
+</code></pre>
+<p>Adopt existing Markdown into <code>kronika.sync.json</code> without
+generating or rewriting it. No Brama call.</p>
 <pre><code class="language-bash">kronika sources
 </code></pre>
 <p>The evidence boundary for the current repository: every selected file, the

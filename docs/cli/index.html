@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CLI reference — Kronika documentation</title>
-  <meta name="description" content="One binary, four commands:">
+  <meta name="description" content="One binary, five documentation commands, including durable import of existing repository documentation.">
   <link rel="canonical" href="https://kronika.wisent.com/docs/cli/">
   <meta name="theme-color" content="#10100f">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -29,8 +29,9 @@
       <article class="prose">
         <div class="article-kicker">Kronika documentation</div>
         <h1>CLI reference</h1>
-        <p>One binary, four commands:</p>
-<pre><code class="language-text">kronika sources [options]
+        <p>One binary, five documentation commands:</p>
+<pre><code class="language-text">kronika init [--docs &lt;path&gt;] [--source &lt;path&gt;] [--replace]
+kronika sources [options]
 kronika check --base &lt;ref&gt; [options]
 kronika write [options]
 kronika sync [options]
@@ -38,6 +39,7 @@ kronika sync [options]
 <nav aria-label="Kronika CLI command tree">
   <h2>Command pages</h2>
   <ul>
+    <li><a href="/docs/cli/init/"><code>kronika init</code></a> — adopt existing Markdown into the sync manifest</li>
     <li><a href="/docs/cli/sources/"><code>kronika sources</code></a> — inspect the safe source manifest</li>
     <li><a href="/docs/cli/check/"><code>kronika check</code></a> — gate one exact Git change</li>
     <li><a href="/docs/cli/write/"><code>kronika write</code></a> — generate or apply one document</li>
@@ -48,7 +50,7 @@ kronika sync [options]
 unknown command or option is an error. Every error is written to stderr as
 <code>kronika: &lt;message&gt;</code> with exit status <code>1</code>; the complete sentence inventory,
 with what each means, is the <a href="/docs/runbook/">runbook</a>.</p>
-<p><code>sources</code> reads no Brama configuration. <code>check</code>, <code>write</code>, and <code>sync</code> require
+<p><code>init</code> and <code>sources</code> read no Brama configuration. <code>check</code>, <code>write</code>, and <code>sync</code> require
 <code>BRAMA_URL</code> (or <code>MODEL_ROUTER_URL</code>) and <code>BRAMA_API_KEY</code> (or
 <code>MODEL_ROUTER_TOKEN</code>) in the environment; see
 <a href="/docs/configuration/">configuration</a>.</p>
@@ -61,6 +63,11 @@ with what each means, is the <a href="/docs/runbook/">runbook</a>.</p>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td><code>init</code></td>
+<td>manifest imported or identical manifest unchanged</td>
+<td>conflicting manifest, rejected selection, or any failure</td>
+</tr>
 <tr>
 <td><code>sources</code></td>
 <td>manifest printed</td>
@@ -106,8 +113,13 @@ but unused.</p>
 <td>target document inside the repository</td>
 </tr>
 <tr>
+<td><code>--docs &lt;path&gt;</code></td>
+<td><code>README.md</code> and <code>docs/</code> when present</td>
+<td>existing Markdown file or directory adopted by <code>init</code>; repeatable</td>
+</tr>
+<tr>
 <td><code>--source &lt;path&gt;</code></td>
-<td>automatic discovery</td>
+<td>automatic discovery, or <code>.</code> for <code>init</code></td>
 <td>explicit source file or directory; repeatable</td>
 </tr>
 <tr>
@@ -186,6 +198,11 @@ but unused.</p>
 <td>sync: push the sync commit</td>
 </tr>
 <tr>
+<td><code>--replace</code></td>
+<td>off</td>
+<td><code>init</code>: atomically replace a different retained sync manifest</td>
+</tr>
+<tr>
 <td><code>--json</code></td>
 <td>off</td>
 <td>machine-readable result</td>
@@ -195,6 +212,22 @@ but unused.</p>
 <p>Numeric flags must be positive integers
 (<code>&lt;flag&gt; must be a positive integer</code>); a value-taking flag without a value
 is <code>&lt;flag&gt; requires a value</code>.</p>
+<h2 id="kronika-init">kronika init</h2>
+<p>Adopts the repository's existing Markdown into schema-version-1
+<code>kronika.sync.json</code>. Default document selections are an existing
+<code>README.md</code> and every Markdown file beneath <code>docs/</code>; repeat
+<code>--docs</code> to choose exact files or directories. Every document receives
+the repeated <code>--source</code> paths, or <code>.</code> when none are supplied.
+The operation validates the entire selection before one atomic manifest write
+and never changes a document, invokes Brama, generates prose, or executes a
+repository command.</p>
+<p>Stdout is JSON with <code>status</code>, <code>imported</code>,
+<code>unchanged</code>, <code>conflicting</code>, and <code>rejected</code>.
+An identical manifest is unchanged. A different existing manifest is a
+conflict and remains byte-for-byte intact unless <code>--replace</code> is
+explicit. Missing, escaping, symbolic-link, and non-Markdown selections are
+rejected before mutation. The manifest is the exact file consumed later by
+<code>kronika sync</code>.</p>
 <h2 id="kronika-sources">kronika sources</h2>
 <p>Prints the safe source manifest without calling Brama:</p>
 <pre><code class="language-json">{

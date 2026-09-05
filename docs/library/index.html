@@ -29,10 +29,30 @@
       <article class="prose">
         <div class="article-kicker">Kronika documentation</div>
         <h1>Library API</h1>
-        <p>The npm package <code>@wisent-ai/kronika</code> exposes the same selection, generation,
-audit, and sync contract as the CLI, as a dependency-free ES module for
-Node.js 22+. The entry point is <code>dist/src/index.js</code>; everything below is a
-named export of the package root.</p>
+        <p>The npm package <code>@wisent-ai/kronika</code> exposes the same adoption,
+selection, generation, audit, and sync contract as the CLI, as a dependency-free
+ES module for Node.js 22+. The entry point is <code>dist/src/index.js</code>;
+everything below is a named export of the package root.</p>
+<h2 id="workspace-adoption">Workspace adoption</h2>
+<p><code>initializeDocumentationWorkspace(options: InitializeWorkspaceOptions):
+InitializeWorkspaceResult</code> is the library boundary used by <code>kronika init</code>.
+It validates existing Markdown and evidence paths within one repository, then
+atomically creates or explicitly replaces the schema-version-1 sync manifest.
+It does not read document bodies into its result, generate text, call Brama, or
+execute repository commands.</p>
+<pre><code class="language-ts">import { initializeDocumentationWorkspace } from &quot;@wisent-ai/kronika&quot;;
+
+const result = initializeDocumentationWorkspace({
+  repo: &quot;/path/to/existing-project&quot;,
+  manifestPath: &quot;kronika.sync.json&quot;,
+  documents: [&quot;README.md&quot;, &quot;docs&quot;],
+  sources: [&quot;src&quot;],
+});
+</code></pre>
+<p>The result separates <code>imported</code>, <code>unchanged</code>,
+<code>conflicting</code>, and <code>rejected</code>. An identical manifest is unchanged; a
+different existing manifest is preserved unless <code>replace: true</code>. The accepted
+paths, defaults, and failures are documented under <a href="/docs/cli/init/">kronika init</a>.</p>
 <h2 id="the-completion-boundary">The completion boundary</h2>
 <p>All model access goes through one interface, so any client can substitute
 for Brama in tests or embeddings:</p>
@@ -126,13 +146,15 @@ answers malformed JSON fails exactly like a misbehaving model
   <code>kronika.sync.json</code> and <code>kronika.sync-state.json</code>.</li>
 </ul>
 <h2 id="types">Types</h2>
-<p>All contract types are exported: <code>ChatMessage</code>, <code>CompletionClient</code>,
-<code>CompletionRequest</code>, <code>CompletionResult</code>, <code>SourceOptions</code>, <code>SourceDocument</code>,
-<code>SkippedSource</code>, <code>SourceCollection</code>, <code>DocumentationFinding</code>,
-<code>CheckDocumentationOptions</code>, <code>CheckDocumentationResult</code>,
-<code>WriteDocumentationOptions</code>, <code>WriteDocumentationResult</code>, <code>SyncDefaults</code>,
-<code>SyncDocument</code>, <code>SyncManifest</code>, <code>SyncOptions</code>, <code>SyncOutcome</code>, <code>SyncResult</code>,
-and <code>SyncState</code>.</p>
+<p>All contract types are exported: <code>InitializeWorkspaceOptions</code>,
+<code>InitializeWorkspaceResult</code>, <code>ChatMessage</code>, <code>CompletionClient</code>,
+<code>CompletionRequest</code>, <code>CompletionResult</code>, <code>SourceOptions</code>,
+<code>SourceDocument</code>, <code>SkippedSource</code>, <code>SourceCollection</code>,
+<code>DocumentationFinding</code>, <code>CheckDocumentationOptions</code>,
+<code>CheckDocumentationResult</code>, <code>WriteDocumentationOptions</code>,
+<code>WriteDocumentationResult</code>, <code>SyncDefaults</code>, <code>SyncDocument</code>,
+<code>SyncManifest</code>, <code>SyncOptions</code>, <code>SyncOutcome</code>,
+<code>SyncResult</code>, and <code>SyncState</code>.</p>
 <h2 id="example">Example</h2>
 <pre><code class="language-ts">import { BramaClient, writeDocumentation } from &quot;@wisent-ai/kronika&quot;;
 
