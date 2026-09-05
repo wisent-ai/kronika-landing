@@ -21,7 +21,7 @@
   <div class="docs-frame">
     <aside class="docs-sidebar" id="docs-sidebar">
       <label class="docs-filter"><span class="sr-only">Filter documentation</span><input type="search" placeholder="Filter topics" autocomplete="off" data-docs-filter></label>
-      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/">What is Kronika</a><a href="/docs/quick-start/" aria-current="page" class="active">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/">CLI reference</a><a href="/docs/sync/">The sync loop</a><a href="/docs/runbook/">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/">Architecture</a><a href="/docs/library/">Library API</a><a href="/docs/site-pipeline/">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section><section><h2>Concepts</h2><a href="/docs/concepts/source-collection/">Source collection</a><a href="/docs/concepts/check/">Check</a><a href="/docs/concepts/audit/">Audit</a><a href="/docs/concepts/finding/">Finding</a><a href="/docs/concepts/blocker-vs-warning/">Blocker vs warning</a><a href="/docs/concepts/manifest/">Sync manifest</a><a href="/docs/concepts/state/">Sync state</a><a href="/docs/concepts/baseline/">Baseline</a><a href="/docs/concepts/drift/">Drift</a></section><section><h2>Walkthroughs</h2><a href="/docs/walkthroughs/check/">Walkthrough: gating one change</a><a href="/docs/walkthroughs/sync-cycle/">Walkthrough: one full sync cycle</a><a href="/docs/examples/">Examples — kronika in practice</a></section></nav>
+      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/">What is Kronika</a><a href="/docs/quick-start/" aria-current="page" class="active">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/">CLI reference</a><a href="/docs/gui/">Graphical importer</a><a href="/docs/sync/">The sync loop</a><a href="/docs/runbook/">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/">Architecture</a><a href="/docs/library/">Library API</a><a href="/docs/site-pipeline/">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section><section><h2>Concepts</h2><a href="/docs/concepts/source-collection/">Source collection</a><a href="/docs/concepts/check/">Check</a><a href="/docs/concepts/audit/">Audit</a><a href="/docs/concepts/finding/">Finding</a><a href="/docs/concepts/blocker-vs-warning/">Blocker vs warning</a><a href="/docs/concepts/manifest/">Manifest</a><a href="/docs/concepts/state/">State</a><a href="/docs/concepts/baseline/">Baseline</a><a href="/docs/concepts/drift/">Drift</a></section><section><h2>Walkthroughs</h2><a href="/docs/walkthroughs/check/">Gate one change</a><a href="/docs/walkthroughs/sync-cycle/">One sync cycle</a><a href="/docs/examples/">Runnable examples</a></section></nav>
       <p class="filter-empty" hidden>No matching topics.</p>
     </aside>
     <main id="content" class="docs-main">
@@ -59,6 +59,15 @@ exact document and evidence paths. An identical manifest is unchanged; a
 different retained manifest is reported as a conflict and preserved unless
 <code>--replace</code> is explicit. See
 <a href="/docs/cli/init/"><code>kronika init</code></a>.</p>
+<h3 id="graphical-alternative">Graphical alternative</h3>
+<pre><code class="language-bash">kronika gui --repo /path/to/project
+</code></pre>
+<p>Open the exact session URL printed by the foreground command. Select
+repository-relative Markdown and evidence paths, review the destination and
+conflict policy, then import. The GUI invokes the same adoption function as
+<code>init</code> and reads the persisted manifest back; it does not open a browser
+itself, call Brama, generate documentation, or run repository commands. See
+the <a href="/docs/gui/">graphical importer</a>.</p>
 <h2 id="inspect-the-evidence-boundary">Inspect the evidence boundary</h2>
 <pre><code class="language-bash">kronika sources --repo /path/to/project
 </code></pre>

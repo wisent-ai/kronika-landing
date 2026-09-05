@@ -28,6 +28,9 @@
         <h2 id="invocation">Invocation</h2>
         <pre><code class="language-text">kronika init [--repo &lt;path&gt;] [--docs &lt;path&gt; ...] [--source &lt;path&gt; ...]
              [--manifest &lt;path&gt;] [--instruction &lt;text&gt;] [--replace]</code></pre>
+        <p>For the same adoption boundary in a browser workspace, run
+        <code>kronika gui --repo &lt;path&gt;</code>; see the
+        <a href="/docs/gui/">graphical importer</a>.</p>
         <h2 id="accepted-input">Accepted input</h2>
         <p>The repository defaults to the current directory. With no <code>--docs</code>, init selects an existing root <code>README.md</code> and every Markdown file beneath an existing <code>docs/</code> directory. Repeat <code>--docs</code> to select exact Markdown files or directories instead. Non-Markdown file selections, symbolic links, missing paths, and paths outside the repository are rejected.</p>
         <p>Every imported document receives the repeated <code>--source</code> paths as its evidence declaration. With no explicit source, the established manifest value is <code>.</code>. Sources must exist inside the repository and cannot be symbolic links. <code>--instruction</code> supplies one standing instruction for every imported document; otherwise init records its built-in maintenance instruction without changing any document.</p>
@@ -43,6 +46,9 @@
         </ul>
         <h2 id="first-use">First use and replay</h2>
         <p><code>kronika onboarding</code> leads to this command. Onboarding completes only after init writes a valid manifest or accepts an identical retained one. <code>kronika onboarding --reset</code> replays the journey; repeating init is idempotent and completes the new attempt.</p>
+        <p>The graphical importer submits to this same function and reads the
+        accepted manifest back. It does not maintain a second parser, project
+        store, or document copy.</p>
       </article>
       <nav class="page-turn" aria-label="CLI command pages"><a class="previous" href="/docs/cli/"><small>Previous</small><span>← CLI reference</span></a><a class="next" href="/docs/cli/sources/"><small>Next</small><span>kronika sources →</span></a></nav>
       <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>

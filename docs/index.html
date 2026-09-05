@@ -21,7 +21,7 @@
   <div class="docs-frame">
     <aside class="docs-sidebar" id="docs-sidebar">
       <label class="docs-filter"><span class="sr-only">Filter documentation</span><input type="search" placeholder="Filter topics" autocomplete="off" data-docs-filter></label>
-      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/" aria-current="page" class="active">What is Kronika</a><a href="/docs/quick-start/">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/">CLI reference</a><a href="/docs/sync/">The sync loop</a><a href="/docs/runbook/">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/">Architecture</a><a href="/docs/library/">Library API</a><a href="/docs/site-pipeline/">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section><section><h2>Concepts</h2><a href="/docs/concepts/source-collection/">Source collection</a><a href="/docs/concepts/check/">Check</a><a href="/docs/concepts/audit/">Audit</a><a href="/docs/concepts/finding/">Finding</a><a href="/docs/concepts/blocker-vs-warning/">Blocker vs warning</a><a href="/docs/concepts/manifest/">Sync manifest</a><a href="/docs/concepts/state/">Sync state</a><a href="/docs/concepts/baseline/">Baseline</a><a href="/docs/concepts/drift/">Drift</a></section><section><h2>Walkthroughs</h2><a href="/docs/walkthroughs/check/">Walkthrough: gating one change</a><a href="/docs/walkthroughs/sync-cycle/">Walkthrough: one full sync cycle</a><a href="/docs/examples/">Examples — kronika in practice</a></section></nav>
+      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/" aria-current="page" class="active">What is Kronika</a><a href="/docs/quick-start/">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/">CLI reference</a><a href="/docs/gui/">Graphical importer</a><a href="/docs/sync/">The sync loop</a><a href="/docs/runbook/">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/">Architecture</a><a href="/docs/library/">Library API</a><a href="/docs/site-pipeline/">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section><section><h2>Concepts</h2><a href="/docs/concepts/source-collection/">Source collection</a><a href="/docs/concepts/check/">Check</a><a href="/docs/concepts/audit/">Audit</a><a href="/docs/concepts/finding/">Finding</a><a href="/docs/concepts/blocker-vs-warning/">Blocker vs warning</a><a href="/docs/concepts/manifest/">Manifest</a><a href="/docs/concepts/state/">State</a><a href="/docs/concepts/baseline/">Baseline</a><a href="/docs/concepts/drift/">Drift</a></section><section><h2>Walkthroughs</h2><a href="/docs/walkthroughs/check/">Gate one change</a><a href="/docs/walkthroughs/sync-cycle/">One sync cycle</a><a href="/docs/examples/">Runnable examples</a></section></nav>
       <p class="filter-empty" hidden>No matching topics.</p>
     </aside>
     <main id="content" class="docs-main">
@@ -47,6 +47,14 @@ different retained manifest is a conflict unless <code>--replace</code> is
 explicit. The imported manifest is the same state boundary
 <code>kronika sync</code> consumes. Details:
 <a href="/docs/cli/init/"><code>kronika init</code></a>.</p>
+<p>Maintainers who prefer a graphical workspace can run
+<code>kronika gui --repo /path/to/project</code> and open the exact local session
+URL it prints. The accessible browser form exposes the same documents,
+evidence sources, manifest path, instruction, and replacement choice as
+<code>init</code>. It calls the same adoption function, then reads the accepted
+manifest back and displays every retained document and source. It binds
+loopback, opens no browser itself, and makes no Brama request. Details:
+<a href="/docs/gui/">graphical importer</a>.</p>
 <h2 id="the-evidence-boundary-selects">The evidence boundary selects</h2>
 <p>Before any model call, Kronika builds an explicit source manifest. Discovery
 is Git-aware — <code>git ls-files --cached --others --exclude-standard</code> — with a
@@ -100,11 +108,15 @@ source or output. The repository also ships a separate documentation-site
 pipeline (<code>docs-cli</code>) that authors a typed content plan and gates it with
 mechanical validators; that is a distinct subsystem, described in
 <a href="/docs/site-pipeline/">site-pipeline</a>.</p>
-<h2 id="the-first-four-commands">The first four commands</h2>
+<h2 id="the-first-five-commands">The first five commands</h2>
 <pre><code class="language-bash">kronika init
 </code></pre>
 <p>Adopt existing Markdown into <code>kronika.sync.json</code> without
 generating or rewriting it. No Brama call.</p>
+<pre><code class="language-bash">kronika gui --repo /path/to/project
+</code></pre>
+<p>Host the same importer as an authenticated loopback browser workspace. The
+command prints the URL and does not open a browser or call Brama.</p>
 <pre><code class="language-bash">kronika sources
 </code></pre>
 <p>The evidence boundary for the current repository: every selected file, the

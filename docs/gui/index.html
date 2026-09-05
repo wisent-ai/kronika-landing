@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Graphical importer — Kronika documentation</title>
+  <meta name="description" content="Host Kronika's local graphical importer and adopt existing Markdown through the same project initialization function as the CLI.">
+  <link rel="canonical" href="https://kronika.wisent.com/docs/gui/">
+  <meta name="theme-color" content="#10100f">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body class="docs-page">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header docs-header">
+    <a class="brand" href="/" aria-label="Kronika home"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4.5h14.5A3.5 3.5 0 0 1 25 8v19H10a4 4 0 0 1-4-4V5.5a1 1 0 0 1 1-1Z"/><path d="M10 27a4 4 0 0 1 4-4h11M11 10h9M11 15h7"/></svg><span>Kronika</span></a>
+    <nav aria-label="Primary navigation"><a class="selected" href="/docs/">Documentation</a><a href="https://github.com/wisent-ai/kronika">GitHub</a></nav>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="docs-sidebar">Browse docs</button>
+  </header>
+  <div class="docs-frame">
+    <aside class="docs-sidebar" id="docs-sidebar">
+      <label class="docs-filter"><span class="sr-only">Filter documentation</span><input type="search" placeholder="Filter topics" autocomplete="off" data-docs-filter></label>
+      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/">What is Kronika</a><a href="/docs/quick-start/">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/">CLI reference</a><a href="/docs/gui/" aria-current="page" class="active">Graphical importer</a><a href="/docs/sync/">The sync loop</a><a href="/docs/runbook/">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/">Architecture</a><a href="/docs/library/">Library API</a><a href="/docs/site-pipeline/">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section></nav>
+      <p class="filter-empty" hidden>No matching topics.</p>
+    </aside>
+    <main id="content" class="docs-main">
+      <div class="breadcrumbs"><a href="/docs/">Docs</a><span aria-hidden="true">/</span><span>Graphical importer</span></div>
+      <article class="prose">
+        <div class="article-kicker">Kronika local workspace</div>
+        <h1>Graphical existing-project importer</h1>
+        <p><code>kronika gui</code> serves an accessible browser workspace from the installed package. It prints the exact session URL and does not open a browser. The workspace adopts existing Markdown through <code>initializeDocumentationWorkspace</code>, the same exported TypeScript function called by <code>kronika init</code>. There is one manifest format and one persistence implementation.</p>
+
+        <h2 id="start-the-workspace">Start the workspace</h2>
+        <pre><code class="language-bash">kronika gui --repo /path/to/project
+# Select a fixed loopback port when needed:
+kronika gui --repo /path/to/project --port 4173</code></pre>
+        <p>Open the printed URL exactly, including its token fragment. By default the operating system assigns an available port. The server binds <code>127.0.0.1</code> only; it never opens a consent window, model route, deployment, or validation process. Stop the foreground command to end the session.</p>
+
+        <h2 id="fields-and-established-defaults">Fields and established defaults</h2>
+        <table>
+          <thead><tr><th>GUI field</th><th>Adoption option</th><th>Blank/default behavior</th></tr></thead>
+          <tbody>
+            <tr><td>Repository</td><td><code>repo</code></td><td>fixed by <code>kronika gui --repo</code>; shown read-only in the workspace</td></tr>
+            <tr><td>Markdown files or directories</td><td><code>documents</code></td><td>existing <code>README.md</code> and <code>docs/</code>; one repository-relative selection per line</td></tr>
+            <tr><td>Evidence files or directories</td><td><code>sources</code></td><td><code>.</code>; one repository-relative selection per line</td></tr>
+            <tr><td>Manifest path</td><td><code>manifestPath</code></td><td><code>kronika.sync.json</code>, inside the repository</td></tr>
+            <tr><td>Standing instruction</td><td><code>instruction</code></td><td>Kronika's built-in maintenance instruction</td></tr>
+            <tr><td>Replace conflict</td><td><code>replace</code></td><td>off; a different manifest is preserved and reported</td></tr>
+          </tbody>
+        </table>
+        <p>Browser file controls cannot disclose a real local path, so the local workspace accepts explicit repository-relative selections rather than uploading document copies. The selected files remain at their original paths; directories are traversed by the core importer, duplicate Markdown paths collapse to one identity, source declarations are de-duplicated and sorted, and no document body crosses the HTTP boundary.</p>
+
+        <h2 id="results-and-readback">Results and readback</h2>
+        <p>The result keeps <code>imported</code>, <code>unchanged</code>, <code>conflicting</code>, and <code>rejected</code> paths separate. Conflicts include the retained manifest path and the reason replacement was refused. Rejections include the source-derived path error. After an <code>imported</code> or <code>unchanged</code> result, the server loads the exact persisted manifest with <code>loadSyncManifest</code>; the workspace renders its schema version and every accepted document, evidence source, and standing instruction. It never infers success from form state.</p>
+        <ul>
+          <li><strong>Imported</strong> — the validated manifest was atomically persisted and read back.</li>
+          <li><strong>Unchanged</strong> — the retained manifest is structurally identical; no write occurred.</li>
+          <li><strong>Conflict</strong> — the retained manifest differs and remains untouched. Review its readback, then explicitly select replace if appropriate.</li>
+          <li><strong>Rejected</strong> — no project was accepted; the path and reason explain the refusal.</li>
+        </ul>
+        <p>The full adoption behavior and exact selection refusals are the <a href="/docs/cli/init/"><code>kronika init</code> contract</a>. GUI request and session refusals are listed in the <a href="/docs/runbook/#graphical-importer">runbook</a>.</p>
+
+        <h2 id="local-session-security">Local session security</h2>
+        <p>The GUI is a local administrative surface, not a network service. Every API request must carry a 256-bit per-process token. Mutation additionally requires the exact printed origin; every request requires the exact <code>127.0.0.1:&lt;port&gt;</code> host, preventing alternate-host and DNS-rebinding use. JSON bodies are capped at 65536 bytes before parsing. The frontend uses DOM text nodes for repository paths, reasons, and manifest values, and the server applies a self-only content security policy, frame denial, no-referrer policy, and no-store responses.</p>
+
+        <h2 id="persistence-boundary">Persistence boundary</h2>
+        <p>Import can write only the selected manifest, atomically, after the core importer validates the entire repository-confined selection. It does not copy or change documents, write sync state, call Brama, infer or generate prose, execute Git or package scripts, deploy anything, or invoke tests and validation. Later <code>kronika sync</code> consumes the same manifest.</p>
+      </article>
+      <nav class="page-turn" aria-label="Documentation pages"><a class="previous" href="/docs/cli/"><small>Previous</small><span>← CLI reference</span></a><a class="next" href="/docs/sync/"><small>Next</small><span>The sync loop →</span></a></nav>
+      <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>
+    </main>
+  </div>
+</body>
+</html>

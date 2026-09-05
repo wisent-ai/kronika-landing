@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CLI reference — Kronika documentation</title>
-  <meta name="description" content="One binary, five documentation commands, including durable import of existing repository documentation.">
+  <meta name="description" content="One binary, six documentation commands, including CLI and graphical adoption of existing repository documentation.">
   <link rel="canonical" href="https://kronika.wisent.com/docs/cli/">
   <meta name="theme-color" content="#10100f">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -29,8 +29,9 @@
       <article class="prose">
         <div class="article-kicker">Kronika documentation</div>
         <h1>CLI reference</h1>
-        <p>One binary, five documentation commands:</p>
+        <p>One binary, six documentation commands:</p>
 <pre><code class="language-text">kronika init [--docs &lt;path&gt;] [--source &lt;path&gt;] [--replace]
+kronika gui [--repo &lt;path&gt;] [--port &lt;n&gt;]
 kronika sources [options]
 kronika check --base &lt;ref&gt; [options]
 kronika write [options]
@@ -40,6 +41,7 @@ kronika sync [options]
   <h2>Command pages</h2>
   <ul>
     <li><a href="/docs/cli/init/"><code>kronika init</code></a> — adopt existing Markdown into the sync manifest</li>
+    <li><a href="/docs/gui/"><code>kronika gui</code></a> — host the local graphical existing-project importer</li>
     <li><a href="/docs/cli/sources/"><code>kronika sources</code></a> — inspect the safe source manifest</li>
     <li><a href="/docs/cli/check/"><code>kronika check</code></a> — gate one exact Git change</li>
     <li><a href="/docs/cli/write/"><code>kronika write</code></a> — generate or apply one document</li>
@@ -50,7 +52,7 @@ kronika sync [options]
 unknown command or option is an error. Every error is written to stderr as
 <code>kronika: &lt;message&gt;</code> with exit status <code>1</code>; the complete sentence inventory,
 with what each means, is the <a href="/docs/runbook/">runbook</a>.</p>
-<p><code>init</code> and <code>sources</code> read no Brama configuration. <code>check</code>, <code>write</code>, and <code>sync</code> require
+<p><code>init</code>, <code>gui</code>, and <code>sources</code> read no Brama configuration. <code>check</code>, <code>write</code>, and <code>sync</code> require
 <code>BRAMA_URL</code> (or <code>MODEL_ROUTER_URL</code>) and <code>BRAMA_API_KEY</code> (or
 <code>MODEL_ROUTER_TOKEN</code>) in the environment; see
 <a href="/docs/configuration/">configuration</a>.</p>
@@ -67,6 +69,11 @@ with what each means, is the <a href="/docs/runbook/">runbook</a>.</p>
 <td><code>init</code></td>
 <td>manifest imported or identical manifest unchanged</td>
 <td>conflicting manifest, rejected selection, or any failure</td>
+</tr>
+<tr>
+<td><code>gui</code></td>
+<td>loopback workspace is listening; command remains in foreground</td>
+<td>invalid port, unavailable port, missing packaged asset, or server failure</td>
 </tr>
 <tr>
 <td><code>sources</code></td>
@@ -106,6 +113,11 @@ but unused.</p>
 <td><code>--repo &lt;path&gt;</code></td>
 <td>current directory</td>
 <td>repository root</td>
+</tr>
+<tr>
+<td><code>--port &lt;n&gt;</code></td>
+<td>operating-system assigned</td>
+<td><code>gui</code> loopback port, from 1 through 65535</td>
 </tr>
 <tr>
 <td><code>--output &lt;path&gt;</code></td>
@@ -228,6 +240,15 @@ conflict and remains byte-for-byte intact unless <code>--replace</code> is
 explicit. Missing, escaping, symbolic-link, and non-Markdown selections are
 rejected before mutation. The manifest is the exact file consumed later by
 <code>kronika sync</code>.</p>
+<h2 id="kronika-gui">kronika gui</h2>
+<p>Hosts the installed <a href="/docs/gui/">graphical importer</a> on
+<code>127.0.0.1</code> and prints its exact per-session URL without opening a
+browser. The repository is fixed by <code>--repo</code>; the form exposes document
+and evidence selections, manifest destination, standing instruction, and
+explicit conflict replacement. Submission calls the same exported
+<code>initializeDocumentationWorkspace</code> function as <code>init</code>, then reads the
+accepted manifest back for display. It does not call Brama, generate or alter
+a document, execute repository commands, deploy, or run validation.</p>
 <h2 id="kronika-sources">kronika sources</h2>
 <p>Prints the safe source manifest without calling Brama:</p>
 <pre><code class="language-json">{
