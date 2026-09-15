@@ -9,3 +9,10 @@
 # exactly this path, and VERSION is the version source .wisent-release.json
 # names. Moving any of them renames a public address or breaks a tool.
 .
+# Two published pages, not modules. This site is raw HTML served per path:
+# one page is one topic at one address, and every page carries the site
+# navigation inline because there is no include mechanism. The CLI reference
+# is the index over docs/cli/<command>/ and the runbook is one procedure read
+# top to bottom; splitting either one invents addresses nothing links to.
+docs/cli/index.html
+docs/runbook/index.html
