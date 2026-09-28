@@ -26,6 +26,9 @@
           "build"
         ]
       },
+      "tests": [
+        {"name": "smoke", "argv": ["stado", "web", "smoke"]}
+      ],
       "stage": {
         "dist/kronika-landing-web.tar.gz": "kronika-landing-web.tar.gz",
         "dist/kronika-landing-web.tar.gz.sha256": "kronika-landing-web.tar.gz.sha256",
