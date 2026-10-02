@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>kronika onboarding — Kronika documentation</title>
+  <meta name="description" content="Reference for kronika onboarding, the first-use journey on the command line.">
+  <link rel="canonical" href="https://kronika.wisent.com/docs/cli/onboarding/">
+  <meta name="theme-color" content="#10100f">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
+</head>
+<body class="docs-page">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header docs-header">
+    <a class="brand" href="/" aria-label="Kronika home"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4.5h14.5A3.5 3.5 0 0 1 25 8v19H10a4 4 0 0 1-4-4V5.5a1 1 0 0 1 1-1Z"/><path d="M10 27a4 4 0 0 1 4-4h11M11 10h9M11 15h7"/></svg><span>Kronika</span></a>
+    <nav aria-label="Primary navigation"><a class="selected" href="/docs/">Documentation</a><a href="https://github.com/wisent-ai/kronika">GitHub</a></nav>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="docs-sidebar">Browse docs</button>
+  </header>
+  <div class="docs-frame">
+    <aside class="docs-sidebar" id="docs-sidebar">
+      <label class="docs-filter"><span class="sr-only">Filter documentation</span><input type="search" placeholder="Filter topics" autocomplete="off" data-docs-filter></label>
+      <nav aria-label="Documentation navigation" data-docs-nav><section><h2>Start here</h2><a href="/docs/">What is Kronika</a><a href="/docs/quick-start/">Quick start</a></section><section><h2>Use Kronika</h2><a href="/docs/sources/">Source selection</a><a href="/docs/configuration/">Configuration</a><a href="/docs/cli/" aria-current="page" class="active">CLI reference</a><a href="/docs/sync/">The sync loop</a><a href="/docs/runbook/">Runbook</a></section><section><h2>Reference</h2><a href="/docs/architecture/">Architecture</a><a href="/docs/library/">Library API</a><a href="/docs/site-pipeline/">Site pipeline</a><a href="/docs/writing-standard/">Kronika writing standard</a></section></nav>
+      <p class="filter-empty" hidden>No matching topics.</p>
+    </aside>
+    <main id="content" class="docs-main">
+      <div class="breadcrumbs"><a href="/docs/">Docs</a><span aria-hidden="true">/</span><a href="/docs/cli/">CLI</a><span aria-hidden="true">/</span><span>onboarding</span></div>
+      <article class="prose">
+        <div class="article-kicker">Kronika CLI command</div>
+        <h1><code>kronika onboarding</code></h1>
+        <p>Present or move the first-use journey from the command line: the same screens, progress and first-success fact the graphical importer walks, read from Kronika's own packaged journey and kept under Kronika's own state.</p>
+        <h2 id="invocation">Invocation</h2>
+<pre><code class="language-text">kronika onboarding [--advance | --skip | --reset | --status] [--json]
+</code></pre>
+        <p>With no action the current screen is shown and an attempt is started when none exists. The four actions are exclusive; the last one named wins.</p>
+        <h2 id="inputs-and-options">Inputs and options</h2>
+        <table><thead><tr><th>Option</th><th>Effect</th></tr></thead><tbody>
+          <tr><td><code>--advance</code></td><td>Moves to the next screen along the journey's own transitions.</td></tr>
+          <tr><td><code>--skip</code></td><td>Leaves the journey without completing it; the workspace stays usable.</td></tr>
+          <tr><td><code>--reset</code></td><td>Discards the recorded attempt and replays the journey from its entry screen.</td></tr>
+          <tr><td><code>--status</code></td><td>Reports an existing attempt without starting one; with none, the entry screen as not started.</td></tr>
+          <tr><td><code>--json</code></td><td>Prints the view below as JSON instead of the text a person reads.</td></tr>
+        </tbody></table>
+        <p>No Brama configuration is read. When <code>KRONIKA_STADO_INTEGRATION_TOKEN</code> and the control-plane origin are set, progress is also mirrored to the control plane; without them local progress is authoritative and nothing is refused.</p>
+        <h2 id="output-and-state">Output and state</h2>
+        <p>Stdout is the current screen: <code>status</code> (<code>not_started</code>, <code>in_progress</code>, <code>completed</code> or <code>skipped</code>), <code>screenId</code>, <code>screenKind</code>, <code>step</code> of <code>stepCount</code>, <code>title</code>, <code>body</code>, <code>actions</code>, the screen's <code>command</code> and expected <code>result</code> when it declares them, <code>completedScreenIds</code> and <code>firstSuccessFact</code>. Completion is recorded only when the fact is observed — <code>kronika init</code> adopting or recognising a workspace — never by viewing a screen. Progress is written under Kronika's state directory; a persisted attempt is resumed only when it belongs to this journey version and this installation, otherwise a fresh attempt starts.</p>
+        <h2 id="refusals">Exact refusals</h2>
+        <ul>
+          <li><code>onboarding bundle envelope is invalid</code>, <code>onboarding bundle identity is invalid</code>, <code>onboarding bundle integrity is invalid</code>, <code>onboarding screen graph is invalid</code>, <code>onboarding screen is invalid</code>, <code>onboarding entry screen is missing</code>, <code>onboarding fallback is missing</code>, <code>onboarding transition is invalid</code> — a journey bundle that does not validate; the packaged canonical journey is used in its place where one is available.</li>
+          <li><code>onboarding progress points at an unknown screen</code> — a recorded attempt names a screen the journey no longer has.</li>
+          <li><code>onboarding control plane is unavailable</code>, <code>onboarding control plane URL is invalid</code>, <code>onboarding control plane rejected the request</code> — the mirror to the control plane, reported when it was configured and did not answer; local progress stays authoritative.</li>
+        </ul>
+        <p>Any refusal is written to stderr as <code>kronika: &lt;message&gt;</code> and exits <code>1</code>; an unknown option is <code>Unknown option: &lt;flag&gt;</code> and exits <code>2</code> with the usage.</p>
+      </article>
+      <nav class="page-turn" aria-label="CLI command pages"><a class="previous" href="/docs/cli/sync/"><small>Previous</small><span>← kronika sync</span></a><a class="next" href="/docs/gui/"><small>Next</small><span>kronika gui →</span></a></nav>
+      <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>
+    </main>
+  </div>
+</body>
+</html>

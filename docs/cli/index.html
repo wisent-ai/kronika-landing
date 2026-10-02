@@ -29,13 +29,14 @@
       <article class="prose">
         <div class="article-kicker">Kronika documentation</div>
         <h1>CLI reference</h1>
-        <p>One binary, six documentation commands:</p>
+        <p>One binary, seven commands:</p>
 <pre><code class="language-text">kronika init [--docs &lt;path&gt;] [--source &lt;path&gt;] [--replace]
 kronika gui [--repo &lt;path&gt;] [--port &lt;n&gt;]
 kronika sources [options]
 kronika check --base &lt;ref&gt; [options]
 kronika write [options]
 kronika sync [options]
+kronika onboarding [--advance | --skip | --reset | --status] [--json]
 </code></pre>
 <nav aria-label="Kronika CLI command tree">
   <h2>Command pages</h2>
@@ -46,13 +47,14 @@ kronika sync [options]
     <li><a href="/docs/cli/check/"><code>kronika check</code></a> — gate one exact Git change</li>
     <li><a href="/docs/cli/write/"><code>kronika write</code></a> — generate or apply one document</li>
     <li><a href="/docs/cli/sync/"><code>kronika sync</code></a> — reconcile manifest-declared documents</li>
+    <li><a href="/docs/cli/onboarding/"><code>kronika onboarding</code></a> — present or move the first-use journey</li>
   </ul>
 </nav>
 <p><code>kronika</code> with no arguments, <code>help</code>, <code>-h</code>, or <code>--help</code> prints usage. An
 unknown command or option is an error. Every error is written to stderr as
 <code>kronika: &lt;message&gt;</code> with exit status <code>1</code>; the complete sentence inventory,
 with what each means, is the <a href="/docs/runbook/">runbook</a>.</p>
-<p><code>init</code>, <code>gui</code>, and <code>sources</code> read no Brama configuration. <code>check</code>, <code>write</code>, and <code>sync</code> require
+<p><code>init</code>, <code>gui</code>, <code>sources</code>, and <code>onboarding</code> read no Brama configuration. <code>check</code>, <code>write</code>, and <code>sync</code> require
 <code>BRAMA_URL</code> (or <code>MODEL_ROUTER_URL</code>) and <code>BRAMA_API_KEY</code> (or
 <code>MODEL_ROUTER_TOKEN</code>) in the environment; see
 <a href="/docs/configuration/">configuration</a>.</p>
