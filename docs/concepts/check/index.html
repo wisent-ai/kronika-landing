@@ -112,7 +112,7 @@ $ kronika check --base HEAD~1 --max-diff-bytes 1
 kronika: Git diff is 359 bytes, above --max-diff-bytes 1; narrow or split the change rather than auditing a truncated diff
 </code></pre>
 <p>Transport, environment, and verdict-validation failures surface their own
-sentences (<code>fetch failed</code>, <code>Brama request timed out after &lt;n&gt;ms</code>,
+sentences (<code>fetch failed</code>, <code>Brama returned HTTP &lt;status&gt;: &lt;detail&gt;</code>,
 <code>Kronika returned invalid documentation-check JSON</code>, …) — all exit <code>1</code>.</p>
 <h2 id="not-to-be-confused-with">Not to be confused with</h2>
 <ul>
