@@ -86,8 +86,8 @@ secrets and must never be committed.</p>
   <code>&lt;agentId&gt;:&lt;timestamp&gt;:&lt;sha256-hex-of-body&gt;</code> keyed with the secret, so the
   signature commits to the exact JSON body.</li>
 </ul>
-<p>The request is aborted after <code>--timeout-ms</code> (default <code>120000</code>) with the
-error <code>Brama request timed out after &lt;n&gt;ms</code>. A non-2xx response surfaces as
+<p>The request has no time limit: it ends with Brama's answer or a transport
+error. A non-2xx response surfaces as
 <code>Brama returned HTTP &lt;status&gt;</code> with the server's error detail. The response
 may carry <code>content</code> directly or the OpenAI <code>choices[0].message.content</code>
 shape (string or text parts); an empty completion is the error

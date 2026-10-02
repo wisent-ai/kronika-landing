@@ -126,10 +126,6 @@ kronika: Git commit cannot be resolved: deadbeef
 <pre><code class="language-console">$ kronika check --base HEAD~1
 kronika: fetch failed
 </code></pre>
-<p>Too slow for the budget:</p>
-<pre><code class="language-console">$ kronika check --base HEAD~1 --timeout-ms 1
-kronika: Brama request timed out after 1ms
-</code></pre>
 <p>And a verdict that fails validation is an error, not a pass — captured by
 scripting the stub to answer prose and a self-contradicting verdict:</p>
 <pre><code class="language-console">kronika: Kronika returned invalid documentation-check JSON

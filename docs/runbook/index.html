@@ -57,7 +57,7 @@ marked ones were captured by running the CLI.</p>
 </tr>
 <tr>
 <td><code>&lt;flag&gt; must be a positive integer</code> †</td>
-<td>numeric flags (<code>--max-*</code>, <code>--timeout-ms</code>, <code>--port</code>) reject zero, negatives, and non-integers</td>
+<td>numeric flags (<code>--max-*</code>, <code>--port</code>) reject zero, negatives, and non-integers</td>
 </tr>
 <tr>
 <td><code>--port must be between 1 and 65535</code></td>
@@ -217,10 +217,6 @@ or private deployment directory</code> · <code>credential or generated lock fil
 <tr>
 <td><code>fetch failed</code> †</td>
 <td>Node's own sentence for a network-level failure (refused connection, DNS); Brama never answered. Check <code>BRAMA_URL</code> and reachability</td>
-</tr>
-<tr>
-<td><code>Brama request timed out after &lt;n&gt;ms</code> †</td>
-<td>aborted at <code>--timeout-ms</code> (default <code>120000</code>)</td>
 </tr>
 <tr>
 <td><code>Brama returned HTTP &lt;status&gt;: &lt;detail&gt;</code> †</td>
