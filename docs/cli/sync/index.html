@@ -40,10 +40,10 @@
           <tr><td><code>--manifest &lt;path&gt;</code></td><td><code>kronika.sync.json</code></td><td>Sync manifest inside the repository.</td></tr>
           <tr><td><code>--state &lt;path&gt;</code></td><td><code>kronika.sync-state.json</code></td><td>Persistent reconciliation baselines.</td></tr>
           <tr><td><code>--model &lt;selector&gt;</code></td><td><code>KRONIKA_MODEL</code> or <code>any</code></td><td>Default Brama model unless a document overrides it.</td></tr>
-          <tr><td><code>--max-input-bytes &lt;n&gt;</code></td><td><code>200000</code></td><td>Default total source budget.</td></tr>
-          <tr><td><code>--max-file-bytes &lt;n&gt;</code></td><td><code>64000</code></td><td>Default per-file source limit.</td></tr>
-          <tr><td><code>--max-diff-bytes &lt;n&gt;</code></td><td><code>200000</code></td><td>Default complete-diff budget.</td></tr>
-          <tr><td><code>--max-tokens &lt;n&gt;</code></td><td><code>8000</code></td><td>Default completion token budget.</td></tr>
+          <tr><td><code>--max-input-bytes &lt;n&gt;</code></td><td>none</td><td>Total source budget for documents that state none; unset, sources are read whole.</td></tr>
+          <tr><td><code>--max-file-bytes &lt;n&gt;</code></td><td>none</td><td>Per-file source limit for documents that state none.</td></tr>
+          <tr><td><code>--max-diff-bytes &lt;n&gt;</code></td><td>none</td><td>Complete-diff limit for documents that state none; unset, the whole diff is audited.</td></tr>
+          <tr><td><code>--max-tokens &lt;n&gt;</code></td><td>none</td><td>Completion token budget for documents that state none.</td></tr>
           <tr><td><code>--dry-run</code></td><td>off</td><td>Reports and audits but writes no document or state, and never commits.</td></tr>
           <tr><td><code>--commit</code></td><td>off</td><td>Stages rewritten documents and state, then creates a sync commit when something changed.</td></tr>
           <tr><td><code>--push</code></td><td>off</td><td>Runs <code>git push</code> after a sync commit; by itself it does not push.</td></tr>

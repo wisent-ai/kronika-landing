@@ -43,10 +43,10 @@
           <tr><td><code>--source &lt;path&gt;</code></td><td>automatic discovery</td><td>Explicit audit evidence; repeatable.</td></tr>
           <tr><td><code>--instruction &lt;text&gt;</code></td><td>standard completeness audit</td><td>Additional documentation goal sent with the exact change.</td></tr>
           <tr><td><code>--model &lt;selector&gt;</code></td><td><code>KRONIKA_MODEL</code> or <code>any</code></td><td>Brama model selector.</td></tr>
-          <tr><td><code>--max-input-bytes &lt;n&gt;</code></td><td><code>200000</code></td><td>Total source budget.</td></tr>
-          <tr><td><code>--max-file-bytes &lt;n&gt;</code></td><td><code>64000</code></td><td>Per-file source limit.</td></tr>
-          <tr><td><code>--max-diff-bytes &lt;n&gt;</code></td><td><code>200000</code></td><td>Maximum complete diff size; a larger diff is refused, never truncated.</td></tr>
-          <tr><td><code>--max-tokens &lt;n&gt;</code></td><td><code>8000</code></td><td>Completion token budget.</td></tr>
+          <tr><td><code>--max-input-bytes &lt;n&gt;</code></td><td>none</td><td>Total source budget; unset, every selected source is read.</td></tr>
+          <tr><td><code>--max-file-bytes &lt;n&gt;</code></td><td>none</td><td>Per-file source limit; unset, no file is skipped for its size.</td></tr>
+          <tr><td><code>--max-diff-bytes &lt;n&gt;</code></td><td>none</td><td>Maximum complete diff size; a larger diff is refused, never truncated. Unset, the whole diff is audited.</td></tr>
+          <tr><td><code>--max-tokens &lt;n&gt;</code></td><td>none</td><td>Completion token budget; unset, the Brama alias's own limit applies.</td></tr>
           <tr><td><code>--json</code></td><td>off</td><td>Emits the machine-readable result.</td></tr>
         </tbody></table>
         <h2 id="output-and-state">Output and state</h2>

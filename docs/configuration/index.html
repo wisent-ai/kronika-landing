@@ -100,11 +100,13 @@ as the <code>model</code> field. Kronika does not resolve providers or models it
 Brama owns client authorization, model selection, and inference. In the
 sync loop, a per-document <code>model</code> in the manifest overrides the flag.</p>
 <h2 id="budgets">Budgets</h2>
-<p>All budgets are plain flags with per-document overrides in the sync
-manifest: <code>--max-input-bytes</code> and <code>--max-file-bytes</code> bound the source
-payload (<a href="/docs/sources/">sources</a>), <code>--max-tokens</code> bounds the completion, and
-<code>--max-diff-bytes</code> bounds the audited Git diff — an oversized diff is
-refused, never truncated. Defaults: <code>200000</code>, <code>64000</code>, <code>8000</code>, <code>200000</code>.</p>
+<p>Every budget is an optional flag with a per-document override in the sync
+manifest, and none has a default: <code>--max-input-bytes</code> and
+<code>--max-file-bytes</code> bound the source payload (<a href="/docs/sources/">sources</a>),
+<code>--max-tokens</code> bounds the completion, and <code>--max-diff-bytes</code> bounds the
+audited Git diff — an oversized diff is refused, never truncated. Unset, every
+source is read whole, the whole diff is audited, and Brama's alias sets its own
+output limit.</p>
 <h2 id="the-site-pipeline-s-endpoint">The site pipeline's endpoint</h2>
 <p>The separate <code>docs-cli</code> pipeline resolves its model endpoint independently:
 <code>BRAMA_URL</code> when set, otherwise the local Stado resolver's brama adapter at

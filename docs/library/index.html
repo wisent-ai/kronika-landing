@@ -91,10 +91,6 @@ const audit = await checkDocumentation({
   base: &quot;origin/main&quot;,
   head: &quot;HEAD&quot;,
   model: &quot;any&quot;,
-  maxTokens: 8_000,
-  maxInputBytes: 200_000,
-  maxFileBytes: 64_000,
-  maxDiffBytes: 200_000,
 }, canned);
 </code></pre>
 <p>The verdict still passes through <code>parseDocumentationCheck</code> — a double that
@@ -104,10 +100,10 @@ answers malformed JSON fails exactly like a misbehaving model
 <ul>
 <li><code>collectSources(options: SourceOptions): SourceCollection</code> — builds the
   bounded source manifest; the rules are in <a href="/docs/sources/">sources</a>.
-  <code>SourceOptions</code> is <code>{ repo, sources?, output, maxInputBytes,
-  maxFileBytes }</code>; the result is <code>{ documents, skipped, totalBytes }</code>.
-  Non-positive budgets throw <code>Source byte limits must be positive</code> — a
-  library-only sentence, since the CLI validates its flags first.</li>
+  <code>SourceOptions</code> is <code>{ repo, sources?, output, maxInputBytes?,
+  maxFileBytes? }</code>; the result is <code>{ documents, skipped, totalBytes }</code>.
+  An unset limit reads every selected source whole; a stated non-positive one throws
+  <code>Source byte limits must be positive</code>.</li>
 </ul>
 <h2 id="generation">Generation</h2>
 <ul>
@@ -169,9 +165,6 @@ const result = await writeDocumentation({
   sources: [&quot;src&quot;, &quot;README.md&quot;],
   instruction: &quot;Document components, request flow, and failure modes.&quot;,
   model: &quot;any&quot;,
-  maxInputBytes: 200_000,
-  maxFileBytes: 64_000,
-  maxTokens: 8_000,
   apply: false,
 }, client);
 

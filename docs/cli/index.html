@@ -158,23 +158,23 @@ but unused.</p>
 </tr>
 <tr>
 <td><code>--max-input-bytes &lt;n&gt;</code></td>
-<td><code>200000</code></td>
-<td>total source budget</td>
+<td>none</td>
+<td>total source budget; unset, every selected source is read</td>
 </tr>
 <tr>
 <td><code>--max-file-bytes &lt;n&gt;</code></td>
-<td><code>64000</code></td>
-<td>per-file source limit</td>
+<td>none</td>
+<td>per-file source limit; unset, no file is skipped for its size</td>
 </tr>
 <tr>
 <td><code>--max-tokens &lt;n&gt;</code></td>
-<td><code>8000</code></td>
-<td>completion token budget</td>
+<td>none</td>
+<td>completion token budget; unset, the Brama alias's own limit applies</td>
 </tr>
 <tr>
 <td><code>--max-diff-bytes &lt;n&gt;</code></td>
-<td><code>200000</code></td>
-<td>Git diff budget for <code>check</code></td>
+<td>none</td>
+<td>Git diff limit for <code>check</code>; unset, the whole diff is audited</td>
 </tr>
 <tr>
 <td><code>--apply</code></td>
@@ -265,8 +265,8 @@ missing path).</p>
 <p>Audits one exact Git change against current documentation. <code>--base</code> is
 required; <code>--base</code> and <code>--head</code> are resolved to commit SHAs
 (<code>git rev-parse --verify &lt;ref&gt;^{commit}</code>) before the model call. The diff is
-taken with <code>--unified=40 --find-renames</code> over <code>base...head</code>; a diff larger
-than <code>--max-diff-bytes</code> is refused with an error rather than audited
+taken with Git's own context and <code>--find-renames</code> over <code>base...head</code>; a diff larger
+than a stated <code>--max-diff-bytes</code> is refused with an error rather than audited
 truncated. The model must answer with a strict JSON verdict; a malformed
 verdict, or a <code>passed</code> value that contradicts its own blocker findings, is
 an error.</p>

@@ -58,7 +58,7 @@ its reason.</p>
 <tr>
 <td><code>totalBytes</code></td>
 <td>number</td>
-<td>sum of selected <code>bytes</code>, always ≤ <code>maxInputBytes</code></td>
+<td>sum of selected <code>bytes</code>, ≤ <code>maxInputBytes</code> when one is stated</td>
 </tr>
 </tbody>
 </table>
@@ -100,10 +100,10 @@ used. Captured against a toy repository:</p>
 <li><strong>Ordering.</strong> Candidates are ranked (output document first, then
    <code>README.md</code>/<code>docs/</code>, then project manifests, then config/schema paths,
    then <code>src/</code>/<code>app/</code>, then the rest, tests last), ties alphabetical.</li>
-<li><strong>Budgets.</strong> A file over <code>maxFileBytes</code> is skipped (<code>larger than &lt;n&gt;
+<li><strong>Budgets.</strong> Only when stated: a file over <code>maxFileBytes</code> is skipped (<code>larger than &lt;n&gt;
    bytes</code>); once <code>maxInputBytes</code> would be exceeded, the rest are skipped
-   (<code>total source limit &lt;n&gt; bytes reached</code>) — ordering decides what the
-   budget is spent on.</li>
+   (<code>total source limit &lt;n&gt; bytes reached</code>) — ordering decides what a stated
+   budget is spent on. Unset, every candidate is read.</li>
 <li><strong>Content checks.</strong> NUL content → <code>binary content</code>; non-UTF-8 → <code>not
    valid UTF-8 text</code>; empty-after-trim files are silently dropped.</li>
 </ol>

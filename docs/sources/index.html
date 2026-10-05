@@ -105,11 +105,12 @@ first, ties broken alphabetically:</p>
 </tbody>
 </table>
 <h2 id="budgets-and-content-checks">Budgets and content checks</h2>
-<p>Two byte budgets bound the payload, both required to be positive:</p>
+<p>Two optional byte limits bound the payload when stated, each a positive integer;
+unset, every selected source is read whole:</p>
 <ul>
-<li><code>--max-file-bytes</code> (default <code>64000</code>): a larger file is skipped with reason
+<li><code>--max-file-bytes</code>: a larger file is skipped with reason
   <code>larger than &lt;n&gt; bytes</code>.</li>
-<li><code>--max-input-bytes</code> (default <code>200000</code>): once the running total would be
+<li><code>--max-input-bytes</code>: once the running total would be
   exceeded, further files are skipped with reason
   <code>total source limit &lt;n&gt; bytes reached</code> — which is why ordering matters.</li>
 </ul>

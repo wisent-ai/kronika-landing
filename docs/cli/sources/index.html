@@ -39,8 +39,8 @@
           <tr><td><code>--repo &lt;path&gt;</code></td><td>current directory</td><td>Repository root used for containment and discovery.</td></tr>
           <tr><td><code>--output &lt;path&gt;</code></td><td><code>README.md</code></td><td>Prioritizes the target document in the manifest; it must remain inside the repository.</td></tr>
           <tr><td><code>--source &lt;path&gt;</code></td><td>automatic discovery</td><td>Selects an explicit file or directory. Repeat the option for multiple sources.</td></tr>
-          <tr><td><code>--max-input-bytes &lt;n&gt;</code></td><td><code>200000</code></td><td>Caps all selected source bytes.</td></tr>
-          <tr><td><code>--max-file-bytes &lt;n&gt;</code></td><td><code>64000</code></td><td>Caps each selected file.</td></tr>
+          <tr><td><code>--max-input-bytes &lt;n&gt;</code></td><td>none</td><td>Caps all selected source bytes; unset, every selected source is read.</td></tr>
+          <tr><td><code>--max-file-bytes &lt;n&gt;</code></td><td>none</td><td>Caps each selected file; unset, no file is skipped for its size.</td></tr>
         </tbody></table>
         <p>Automatic discovery uses Git's tracked and unignored files when available, otherwise it walks the repository. Explicit directories are walked. Credentials, keys, generated/private directories, oversized files, binary content, invalid UTF-8, and files beyond the total budget are skipped and reported with their reason.</p>
         <h2 id="output-and-state">Output and state</h2>
