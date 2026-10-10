@@ -33,7 +33,7 @@
         <h2 id="invocation">Invocation</h2>
 <pre><code class="language-text">kronika onboarding [--advance | --skip | --reset | --status] [--json]
 </code></pre>
-        <p>With no action the current screen is shown and an attempt is started when none exists. The four actions are exclusive; the last one named wins.</p>
+        <p>With no action the current screen is shown and an attempt is started when none exists. Name only one action: combining or repeating action flags is refused before journey state is read or changed, regardless of their order.</p>
         <h2 id="inputs-and-options">Inputs and options</h2>
         <table><thead><tr><th>Option</th><th>Effect</th></tr></thead><tbody>
           <tr><td><code>--advance</code></td><td>Moves to the next screen along the journey's own transitions.</td></tr>
@@ -47,11 +47,12 @@
         <p>Stdout is the current screen: <code>status</code> (<code>not_started</code>, <code>in_progress</code>, <code>completed</code> or <code>skipped</code>), <code>screenId</code>, <code>screenKind</code>, <code>step</code> of <code>stepCount</code>, <code>title</code>, <code>body</code>, <code>actions</code>, the screen's <code>command</code> and expected <code>result</code> when it declares them, <code>completedScreenIds</code> and <code>firstSuccessFact</code>. Completion is recorded only when the fact is observed — <code>kronika init</code> adopting or recognising a workspace — never by viewing a screen. Progress is written under Kronika's state directory; a persisted attempt is resumed only when it belongs to this journey version and this installation, otherwise a fresh attempt starts.</p>
         <h2 id="refusals">Exact refusals</h2>
         <ul>
+          <li><code>onboarding accepts one action; --&lt;first&gt; conflicts with --&lt;second&gt;</code> — combining or repeating action flags is a usage refusal; no journey operation is performed.</li>
           <li><code>onboarding bundle envelope is invalid</code>, <code>onboarding bundle identity is invalid</code>, <code>onboarding bundle integrity is invalid</code>, <code>onboarding screen graph is invalid</code>, <code>onboarding screen is invalid</code>, <code>onboarding entry screen is missing</code>, <code>onboarding fallback is missing</code>, <code>onboarding transition is invalid</code> — a journey bundle that does not validate; the packaged canonical journey is used in its place where one is available.</li>
           <li><code>onboarding progress points at an unknown screen</code> — a recorded attempt names a screen the journey no longer has.</li>
           <li><code>onboarding control plane is unavailable</code>, <code>onboarding control plane URL is invalid</code>, <code>onboarding control plane rejected the request</code> — the mirror to the control plane, reported when it was configured and did not answer; local progress stays authoritative.</li>
         </ul>
-        <p>Any refusal is written to stderr as <code>kronika: &lt;message&gt;</code> and exits <code>1</code>; an unknown option is <code>Unknown option: &lt;flag&gt;</code> and exits <code>2</code> with the usage.</p>
+        <p>Operational refusals are written to stderr as <code>kronika: &lt;message&gt;</code> and exit <code>1</code>. Conflicting actions and unsupported options exit <code>2</code> with usage; unsupported options name the command and flag as <code>onboarding does not accept &lt;flag&gt;</code>.</p>
       </article>
       <nav class="page-turn" aria-label="CLI command pages"><a class="previous" href="/docs/cli/sync/"><small>Previous</small><span>← kronika sync</span></a><a class="next" href="/docs/gui/"><small>Next</small><span>kronika gui →</span></a></nav>
       <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>
