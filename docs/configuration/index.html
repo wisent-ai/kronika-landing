@@ -48,9 +48,9 @@ sync loop by the per-repository manifest described in <a href="/docs/sync/">sync
 <td>Brama origin; <code>MODEL_ROUTER_URL</code> is an accepted alias</td>
 </tr>
 <tr>
-<td><code>BRAMA_API_KEY</code></td>
+<td><code>BRAMA_API_KEY_ROLE</code></td>
 <td>yes, for <code>check</code>/<code>write</code>/<code>sync</code></td>
-<td>scoped bearer token; <code>MODEL_ROUTER_TOKEN</code> is an accepted alias</td>
+<td><code>ROLE#FIELD</code> reference resolved through <code>stado credentials get --role</code>; not a secret value or vault item name</td>
 </tr>
 <tr>
 <td><code>WISENT_APP_AGENT_ID</code></td>
@@ -58,29 +58,40 @@ sync loop by the per-repository manifest described in <a href="/docs/sync/">sync
 <td>request-signing agent identity</td>
 </tr>
 <tr>
-<td><code>WISENT_APP_AGENT_AUTH_SECRET</code></td>
-<td>optional</td>
-<td>request-signing HMAC secret</td>
+<td><code>WISENT_APP_AGENT_AUTH_SECRET_ROLE</code></td>
+<td>with the signing agent identity</td>
+<td><code>ROLE#FIELD</code> reference for the request-signing secret</td>
 </tr>
 <tr>
 <td><code>KRONIKA_MODEL</code></td>
 <td>optional</td>
 <td>default <code>--model</code> selector; <code>any</code> when unset</td>
 </tr>
+<tr>
+<td><code>STADO_BIN</code></td>
+<td>optional</td>
+<td>Credential resolver executable; otherwise <code>stado</code> on PATH</td>
+</tr>
+<tr>
+<td><code>KRONIKA_CREDENTIALS_FILE</code></td>
+<td>explicit alternative without Stado</td>
+<td>Owner-only JSON object mapping role to field to secret value; never committed</td>
+</tr>
 </tbody>
 </table>
-<p><code>kronika sources</code> and <code>kronika --help</code> read none of these. A missing URL or
-bearer is an immediate error (<code>BRAMA_URL or MODEL_ROUTER_URL is required</code>).
-The agent ID and HMAC secret must be supplied together or not at all — the
-client refuses one without the other. <code>.env.example</code> at the repository root
-lists exactly these variables; the bearer and signing secret are runtime
-secrets and must never be committed.</p>
+<p><code>init</code>, <code>gui</code>, <code>sources</code>, <code>onboarding</code> and help need no Brama credentials.
+Model operations refuse a missing URL or <code>BRAMA_API_KEY_ROLE</code>.
+Only role references travel in the environment: the bearer and signing secret
+are resolved when needed. The signing identity and secret must be supplied
+together. Credential resolution failures identify the role, field and failed
+operation. An explicitly selected credentials file must deny group and other
+access, contain valid JSON and hold a nonempty string for the requested field.</p>
 <h2 id="the-brama-request">The Brama request</h2>
 <p>Every model interaction is one POST to <code>&lt;BRAMA_URL&gt;/v1/chat/completions</code>
 (trailing slashes on the URL are stripped) with an OpenAI-compatible body:
-<code>model</code>, <code>messages</code>, <code>max_tokens</code>. Headers:</p>
+<code>model</code> and <code>messages</code>, plus <code>max_tokens</code> only when declared. Headers:</p>
 <ul>
-<li><code>authorization: Bearer &lt;BRAMA_API_KEY&gt;</code> — always.</li>
+<li><code>authorization: Bearer &lt;resolved bearer&gt;</code> — always.</li>
 <li>When the signing pair is set: <code>x-agent-id</code>, <code>x-agent-timestamp</code> (Unix
   seconds), and <code>x-agent-signature</code> — an HMAC-SHA256 over
   <code>&lt;agentId&gt;:&lt;timestamp&gt;:&lt;sha256-hex-of-body&gt;</code> keyed with the secret, so the
@@ -108,11 +119,12 @@ audited Git diff — an oversized diff is refused, never truncated. Unset, every
 source is read whole, the whole diff is audited, and Brama's alias sets its own
 output limit.</p>
 <h2 id="the-site-pipeline-s-endpoint">The site pipeline's endpoint</h2>
-<p>The separate <code>docs-cli</code> pipeline resolves its model endpoint independently:
-<code>BRAMA_URL</code> when set, otherwise the local Stado resolver's brama adapter at
-<code>http://127.0.0.1:17601</code>. There is no provider fallback; when the endpoint
-is down the pipeline exits with code <code>69</code>. See
-<a href="/docs/site-pipeline/">site-pipeline</a>.</p>
+<p>The <code>kronika-site</code> pipeline resolves <code>BRAMA_URL</code>,
+otherwise the address published by Stado in <code>~/.stado/forwards/brama.local</code>.
+If neither is available, the refusal names both declarations; no endpoint is
+built in. An unreachable endpoint exits <code>69</code>. Generation sampling
+belongs to the Brama route, and failed HTTP responses retain their complete
+error body. See <a href="/docs/site-pipeline/">site pipeline</a>.</p>
       </article>
       <nav class="page-turn" aria-label="Documentation pages"><a class="previous" href="/docs/sources/"><small>Previous</small><span>← Source selection</span></a><a class="next" href="/docs/cli/"><small>Next</small><span>CLI reference →</span></a></nav>
       <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>
