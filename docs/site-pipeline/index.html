@@ -153,6 +153,16 @@ reports that parent's command path and the unresolved word.</p>
 help, even when comments or another command come first. Backslash-newline
 continuations remain part of the same invocation; flags on a later command
 are not compared against the first command's help.</p>
+<p>The reusable real-interface journey is <code>node tests/coverage/cli.mjs</code>.
+Declare <code>KRONIKA_TEST_SOURCE_REVISION</code>, <code>KRONIKA_TEST_PRODUCT_REPO</code>,
+<code>KRONIKA_TEST_PLAN</code>, <code>KRONIKA_TEST_BRIEF</code>,
+<code>KRONIKA_TEST_REQUIRED_COMMAND_PAGE</code>, <code>KRONIKA_TEST_SUCCESS_EXIT</code>
+and <code>KRONIKA_TEST_FAILURE_EXIT</code>. It uses an authored plan, a real
+detected binary and the configured Brama service when terms require judgement.
+The baseline must pass all validators; removing a required command page or
+naming an unavailable binary must fail coverage. Revisions, digests, commands,
+exit statuses and validator output remain in <code>.build/coverage</code>;
+only run-owned fixture copies are removed.</p>
 <p>There is no prose quality score. The writing standard guides the author;
 the named validators enforce evidence, vocabulary, structure and coverage.</p>
 <h2 id="emit">Emit</h2>
