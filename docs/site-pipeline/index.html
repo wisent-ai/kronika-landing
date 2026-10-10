@@ -30,11 +30,11 @@
         <div class="article-kicker">Kronika documentation</div>
         <h1>Site pipeline</h1>
         <p>Beyond single-document writing, the repository ships a documentation-site
-pipeline (<code>pipeline/</code>, the <code>docs-cli</code> binary): turn a product repository
-into its documentation site's content, then hold every page to mechanical
-checks before anything publishes. The model authors a typed content plan —
-never markup — and everything around the model is deterministic and
-verifiable. This subsystem is independent of the <code>kronika</code> CLI and
+pipeline (<code>pipeline/</code>, the <code>kronika-site</code> binary): turn a product repository
+into documentation content, then validate every page before publication. Brama
+authors a typed content plan, never markup, and identifies product concepts in
+the terms validator. Evidence, structure and command coverage are checked
+mechanically. The pipeline is separate from the <code>kronika</code> CLI's
 <a href="/docs/sync/">sync loop</a>.</p>
 <h2 id="stages">Stages</h2>
 <p><code>pipeline/src/run.mjs</code> orchestrates detect → author (or load a plan) →
@@ -90,28 +90,35 @@ surface; only declared, probed surfaces count. The completion-gate formula:</p>
 schema in <code>pipeline/schemas/plan.schema.json</code>. The authoring prompt is built
 from <code>brief.json</code>, the declared sources, and
 <code>pipeline/WRITING-STANDARD.md</code> — the injected writing standard. The endpoint
-is <code>BRAMA_URL</code> when set, otherwise the local Stado resolver's brama adapter
-(<code>http://127.0.0.1:17601</code>); there is no provider fallback, and an
-unreachable endpoint fails the run with exit <code>69</code>. <code>--plan &lt;file&gt;</code> skips
-authoring entirely and validates plus emits an existing plan without any
-model call.</p>
+is <code>BRAMA_URL</code> when set, otherwise the address published in
+<code>~/.stado/forwards/brama.local</code>. Neither means an explicit
+<code>not_configured</code> refusal naming both declarations; no address is built in.
+An unreachable endpoint fails authoring with exit <code>69</code>. Brama owns
+sampling settings, and HTTP failures retain the full response body.
+<code>--plan &lt;file&gt;</code> skips authoring, but validation can still call
+Brama to judge recurring undeclared words.</p>
 <h2 id="validate">Validate</h2>
-<p><code>pipeline/src/validate.mjs</code> runs five mechanical validators; the report is
-one entry per validator with its failures, and all five must pass:</p>
+<p><code>pipeline/src/validate.mjs</code> runs five validators; the report contains
+each validator's failures, and all must pass:</p>
 <ul>
 <li><strong>claims</strong> — every <code>claim.evidence</code> occurs in its named source.</li>
 <li><strong>drift</strong> — every documented command usage line and flag exists in the
   live binary's <code>--help</code>. Commands are allowlisted: only the product
   binary, only subcommand words plus <code>--help</code>/<code>--version</code>, nothing
   shell-interpreted.</li>
-<li><strong>terms</strong> — a term used on three or more pages must be declared with a
-  defining page.</li>
+<li><strong>terms</strong> — for undeclared words used on multiple pages, Brama
+judges whether they name product concepts using the complete page prose as
+untrusted reference data. A product concept needs a declaration with an existing
+defining page. An unavailable, malformed or out-of-vocabulary answer fails the
+terms validator; it does not count as approval.</li>
 <li><strong>structure</strong> — the plan validates against the closed schema; there is no
   page kind outside it to choose.</li>
-<li><strong>coverage</strong> — every page kind <code>brief.json</code> requires is present.</li>
+<li><strong>coverage</strong> — every required page kind is present, and each
+command advertised by the binary's <code>--help</code> has a
+<code>cli-reference</code> page at <code>cli/&lt;command&gt;</code> or below it.</li>
 </ul>
-<p>There is no quality judge and no scoring step: the writing standard is what
-the author reads, the validators are what the build enforces.</p>
+<p>There is no prose quality score. The writing standard guides the author;
+the named validators enforce evidence, vocabulary, structure and coverage.</p>
 <h2 id="emit">Emit</h2>
 <p><code>pipeline/src/emit.mjs</code> turns a validated plan into a <code>DocPage</code> data module
 — <code>docs.ts</code> in the <code>--out</code> directory — for the consuming site's
