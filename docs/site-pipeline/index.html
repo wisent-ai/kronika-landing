@@ -129,6 +129,10 @@ names. CRLF output and a section ending with the response are accepted.
 An unreadable section is a CLI failure retaining the complete help text, not
 an empty command inventory. Coverage refuses a declared CLI without a successful,
 nonempty observed inventory, including older briefs that omitted commands.</p>
+<p>Coverage probes the current binary's <code>--help</code> again with the same
+parser as detection. Commands added since the brief was recorded still need
+their pages. An unavailable binary, failed help command or unreadable command
+inventory fails coverage instead of accepting stale brief evidence.</p>
 <p>There is no prose quality score. The writing standard guides the author;
 the named validators enforce evidence, vocabulary, structure and coverage.</p>
 <h2 id="emit">Emit</h2>
