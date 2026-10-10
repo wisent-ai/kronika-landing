@@ -93,6 +93,10 @@ from <code>brief.json</code>, the declared sources, and
 is <code>BRAMA_URL</code> when set, otherwise the address published in
 <code>~/.stado/forwards/brama.local</code>. Neither means an explicit
 <code>not_configured</code> refusal naming both declarations; no address is built in.
+The selected declaration must be an absolute HTTP(S) base URL without credentials,
+query or fragment. An empty or invalid <code>BRAMA_URL</code> is refused by name
+without reading the marker; only an unset variable selects the marker, which
+undergoes the same validation. Refusals do not echo declaration contents.
 An unreachable endpoint fails authoring with exit <code>69</code>. Brama owns
 sampling settings, and HTTP failures retain the full response body.
 <code>--plan &lt;file&gt;</code> skips authoring, but validation can still call
