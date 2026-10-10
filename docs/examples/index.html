@@ -54,11 +54,12 @@ Brama credentials, and their model-independent behavior (offline refusals,
 baseline/advance ticks, exit codes) was executed and captured with
 placeholder credentials — see each walkthrough's "How this was captured".</p>
 <h2 id="environment">Environment</h2>
-<p><code>gate-a-change.sh</code> and <code>sync-forever.sh</code> read the standard variables
-(<a href="/docs/configuration/">configuration</a>): <code>BRAMA_URL</code>, <code>BRAMA_API_KEY</code>,
-optionally <code>WISENT_APP_AGENT_ID</code> + <code>WISENT_APP_AGENT_AUTH_SECRET</code> (both or
-neither), <code>KRONIKA_MODEL</code>. Credentials come from your environment, never
-inline.</p>
+<p>Model-calling examples declare <code>BRAMA_URL</code>,
+<code>BRAMA_API_KEY_ROLE</code> in <code>ROLE#FIELD</code> form and optionally
+<code>KRONIKA_MODEL</code>. Signing uses <code>WISENT_APP_AGENT_ID</code> with
+<code>WISENT_APP_AGENT_AUTH_SECRET_ROLE</code>. The credential source resolves
+secrets; environment variables contain references, not secret values.
+See <a href="/docs/configuration/">configuration</a>.</p>
       </article>
       <nav class="page-turn" aria-label="Documentation pages"><a class="previous" href="/docs/walkthroughs/sync-cycle/"><small>Previous</small><span>← Walkthrough: one full sync cycle</span></a></nav>
       <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>

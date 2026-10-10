@@ -54,14 +54,16 @@ like a failed one.</p>
 <ol>
 <li>Parse flags; <code>check requires --base &lt;ref&gt;</code> is refused before anything
    runs.</li>
-<li>Require <code>BRAMA_URL</code>/<code>BRAMA_API_KEY</code> (or their <code>MODEL_ROUTER_*</code> aliases)
-   from the environment (<a href="/docs/configuration/">configuration</a>).</li>
+<li>Require <code>BRAMA_URL</code> (or <code>MODEL_ROUTER_URL</code>) and
+resolve <code>BRAMA_API_KEY_ROLE</code> through the configured credential source
+(<a href="/docs/configuration/">configuration</a>).</li>
 <li>Collect the <a href="/docs/concepts/source-collection/">source collection</a> and resolve the
    range; refuse an oversized diff rather than truncate it.</li>
 <li>One completion through Brama; validate the verdict field by field
    (<a href="/docs/concepts/finding/">finding</a>).</li>
-<li>Print, then exit: <code>0</code> exactly when the validated verdict has no
-   <a href="/docs/concepts/blocker-vs-warning/">blocker</a>; <code>1</code> on blockers <strong>or any failure</strong>.</li>
+<li>Print, then exit: <code>0</code> when the validated verdict has no
+<a href="/docs/concepts/blocker-vs-warning/">blocker</a>; <code>1</code> for
+blockers or operational failure, <code>2</code> for a usage refusal.</li>
 </ol>
 <h2 id="output">Output</h2>
 <p>Text output is the verdict line, the summary, and one line per finding —
