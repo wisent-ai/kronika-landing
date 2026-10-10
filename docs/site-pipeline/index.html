@@ -97,6 +97,9 @@ The selected declaration must be an absolute HTTP(S) base URL without credential
 query or fragment. An empty or invalid <code>BRAMA_URL</code> is refused by name
 without reading the marker; only an unset variable selects the marker, which
 undergoes the same validation. Refusals do not echo declaration contents.
+Inference redirects are refused at the selected route instead of forwarding
+prompts. Body-read failures retain HTTP status and transport cause; malformed
+JSON or missing assistant content retains endpoint, status and the complete body.
 An unreachable endpoint fails authoring with exit <code>69</code>. Brama owns
 sampling settings, and HTTP failures retain the full response body.
 <code>--plan &lt;file&gt;</code> skips authoring, but validation can still call
