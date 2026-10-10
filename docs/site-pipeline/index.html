@@ -116,7 +116,8 @@ stdout from a failed command is not accepted as authoring evidence.</p>
 <li><strong>drift</strong> — every documented command usage line and flag exists in the
   live binary's <code>--help</code>. Commands are allowlisted: only the product
   binary, only subcommand words plus <code>--help</code>/<code>--version</code>, nothing
-  shell-interpreted.</li>
+  shell-interpreted. Long-option tokens must match completely:
+  <code>--output-format</code> does not establish <code>--output</code>.</li>
 <li><strong>terms</strong> — for undeclared words used on multiple pages, Brama
 judges whether they name product concepts using the complete page prose as
 untrusted reference data. A product concept needs a declaration with an existing
