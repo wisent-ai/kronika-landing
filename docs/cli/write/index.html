@@ -33,7 +33,7 @@
         <h2 id="invocation">Invocation</h2>
 <pre><code class="language-text">kronika write [options]
 </code></pre>
-        <p>No command option is required. <code>BRAMA_URL</code> (or <code>MODEL_ROUTER_URL</code>) and <code>BRAMA_API_KEY</code> (or <code>MODEL_ROUTER_TOKEN</code>) are required. By default Kronika previews a generated <code>README.md</code> for the current directory.</p>
+        <p>No command option is required. Model access requires <code>BRAMA_URL</code> (or <code>MODEL_ROUTER_URL</code>) and <code>BRAMA_API_KEY_ROLE</code> in <code>ROLE#FIELD</code> form; the configured credential source resolves the secret. By default Kronika previews a generated <code>README.md</code> for the current directory.</p>
         <h2 id="inputs-and-options">Inputs and options</h2>
         <table><thead><tr><th>Option</th><th>Default</th><th>Effect</th></tr></thead><tbody>
           <tr><td><code>--repo &lt;path&gt;</code></td><td>current directory</td><td>Repository root.</td></tr>
@@ -53,13 +53,13 @@
         <h2 id="refusals">Exact refusals</h2>
         <ul>
           <li><code>BRAMA_URL or MODEL_ROUTER_URL is required</code></li>
-          <li><code>BRAMA_API_KEY or MODEL_ROUTER_TOKEN is required</code></li>
+          <li><code>BRAMA_API_KEY_ROLE is required: ROLE#FIELD naming the role the item holding the Brama bearer plays, and its field</code></li>
           <li><code>Output is outside the repository: &lt;output&gt;</code></li>
           <li><code>No safe UTF-8 source files were selected</code></li>
           <li><code>Brama returned documentation that is too short</code></li>
           <li><code>Brama returned invalid NUL content</code></li>
         </ul>
-        <p>Source containment, symlink, existence, UTF-8, and byte-budget rules are the same as <a href="/docs/cli/sources/"><code>kronika sources</code></a>. Value-taking flags without a value, non-positive numeric values, unknown options, Brama failures, and file-system failures also exit <code>1</code> with <code>kronika: &lt;message&gt;</code> on stderr.</p>
+        <p>Source containment, symlink, existence, UTF-8, and byte-budget rules are the same as <a href="/docs/cli/sources/"><code>kronika sources</code></a>. Missing flag values, non-positive numeric values and unknown options print help and exit <code>2</code>; Brama and file-system failures exit <code>1</code>. Errors include <code>kronika: &lt;message&gt;</code> on stderr.</p>
       </article>
       <nav class="page-turn" aria-label="CLI command pages"><a class="previous" href="/docs/cli/check/"><small>Previous</small><span>← kronika check</span></a><a class="next" href="/docs/cli/sync/"><small>Next</small><span>kronika sync →</span></a></nav>
       <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>

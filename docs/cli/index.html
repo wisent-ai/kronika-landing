@@ -50,14 +50,15 @@ kronika onboarding [--advance | --skip | --reset | --status] [--json]
     <li><a href="/docs/cli/onboarding/"><code>kronika onboarding</code></a> — present or move the first-use journey</li>
   </ul>
 </nav>
-<p><code>kronika</code> with no arguments, <code>help</code>, <code>-h</code>, or <code>--help</code> prints usage. An
-unknown command or option is an error. Every error is written to stderr as
-<code>kronika: &lt;message&gt;</code> with exit status <code>1</code>; the complete sentence inventory,
-with what each means, is the <a href="/docs/runbook/">runbook</a>.</p>
-<p><code>init</code>, <code>gui</code>, <code>sources</code>, and <code>onboarding</code> read no Brama configuration. <code>check</code>, <code>write</code>, and <code>sync</code> require
-<code>BRAMA_URL</code> (or <code>MODEL_ROUTER_URL</code>) and <code>BRAMA_API_KEY</code> (or
-<code>MODEL_ROUTER_TOKEN</code>) in the environment; see
-<a href="/docs/configuration/">configuration</a>.</p>
+<p><code>kronika</code> with no arguments, <code>help</code>, <code>-h</code>, or <code>--help</code> prints usage.
+An unknown command or option, invalid value, or missing required argument prints
+<code>kronika: &lt;message&gt;</code> and help on stderr with exit status <code>2</code>.
+Operational failures and blocker findings use status <code>1</code>; see the
+<a href="/docs/runbook/">runbook</a>.</p>
+<p><code>init</code>, <code>gui</code>, <code>sources</code>, and <code>onboarding</code> need no Brama configuration.
+Model commands require <code>BRAMA_URL</code> (or <code>MODEL_ROUTER_URL</code>) and
+<code>BRAMA_API_KEY_ROLE</code>, a credential role reference rather than a secret.
+See <a href="/docs/configuration/">configuration</a> for resolution and signing.</p>
 <table>
 <thead>
 <tr>

@@ -33,7 +33,7 @@
         <h2 id="invocation">Invocation</h2>
 <pre><code class="language-text">kronika sync [options]
 </code></pre>
-        <p>A schema-version 1 sync manifest is required at <code>kronika.sync.json</code> by default. Each document entry must have a non-empty <code>output</code> and non-empty <code>sources</code> array. <code>BRAMA_URL</code> (or <code>MODEL_ROUTER_URL</code>) and <code>BRAMA_API_KEY</code> (or <code>MODEL_ROUTER_TOKEN</code>) are required even when the current tick needs no model call.</p>
+        <p>A schema-version 1 sync manifest is required at <code>kronika.sync.json</code> by default. Each document entry must have a non-empty <code>output</code> and non-empty <code>sources</code> array. <code>BRAMA_URL</code> (or <code>MODEL_ROUTER_URL</code>) and a <code>BRAMA_API_KEY_ROLE</code> credential reference are required even when the current tick needs no model call. Secrets are resolved through the configured credential source, not read directly from environment variables.</p>
         <h2 id="inputs-and-options">Inputs and options</h2>
         <table><thead><tr><th>Option</th><th>Default</th><th>Effect</th></tr></thead><tbody>
           <tr><td><code>--repo &lt;path&gt;</code></td><td>current directory</td><td>Git repository containing manifest, state, sources, and outputs.</td></tr>
@@ -60,7 +60,7 @@
           <li><code>Sync manifest declares no documents: &lt;path&gt;</code></li>
           <li><code>Sync manifest entry without an output path in &lt;path&gt;</code> or <code>Sync manifest entry &lt;output&gt; declares no sources</code></li>
           <li><code>Sync state is not valid JSON: &lt;path&gt;. Fix or delete it to re-baseline.</code> or <code>Unsupported sync state schemaVersion in &lt;path&gt;</code></li>
-          <li><code>BRAMA_URL or MODEL_ROUTER_URL is required</code> and <code>BRAMA_API_KEY or MODEL_ROUTER_TOKEN is required</code></li>
+          <li><code>BRAMA_URL or MODEL_ROUTER_URL is required</code> and <code>BRAMA_API_KEY_ROLE is required: ROLE#FIELD naming the role the item holding the Brama bearer plays, and its field</code></li>
         </ul>
         <p>A baseline that cannot be diffed yields a <code>failed</code> outcome instructing the operator to delete that state entry to re-baseline. An incomplete audit yields <code>audit did not complete: &lt;message&gt;</code>; a blocked audit whose rewrite fails yields <code>audit found blockers but the rewrite did not complete: &lt;message&gt;</code>. Git commit or push failures are process errors. See <a href="/docs/sync/">the sync loop</a> for the complete state machine.</p>
       </article>
