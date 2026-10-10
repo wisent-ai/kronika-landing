@@ -83,12 +83,12 @@ marked ones were captured by running the CLI.</p>
 <td><code>check</code>/<code>write</code>/<code>sync</code> need an endpoint; <code>init</code>, <code>gui</code>, <code>sources</code>, onboarding, and help do not</td>
 </tr>
 <tr>
-<td><code>BRAMA_API_KEY or MODEL_ROUTER_TOKEN is required</code> †</td>
-<td>bearer missing</td>
+<td><code>BRAMA_API_KEY_ROLE is required: ROLE#FIELD naming the role the item holding the Brama bearer plays, and its field</code></td>
+<td>Declare the credential role reference; the bearer is resolved from the configured credential source, not supplied as an environment secret.</td>
 </tr>
 <tr>
 <td><code>Brama agent ID and HMAC secret must be supplied together</code> †</td>
-<td>exactly one of <code>WISENT_APP_AGENT_ID</code> / <code>WISENT_APP_AGENT_AUTH_SECRET</code> is set; set both or neither</td>
+<td>Supply <code>WISENT_APP_AGENT_ID</code> and <code>WISENT_APP_AGENT_AUTH_SECRET_ROLE</code> together, or omit both for unsigned requests.</td>
 </tr>
 <tr>
 <td><code>Brama URL is required</code>, <code>Brama API key is required</code></td>

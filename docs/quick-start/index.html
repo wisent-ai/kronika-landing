@@ -95,17 +95,20 @@ instead of automatic discovery. Review this boundary before configuring
 Brama: it is exactly what the model will see.</p>
 <h2 id="configure-brama">Configure Brama</h2>
 <pre><code class="language-bash">export BRAMA_URL=&lt;your-brama-origin&gt;
-export BRAMA_API_KEY=&lt;scoped-bearer&gt;
+export BRAMA_API_KEY_ROLE='&lt;bearer-role&gt;#&lt;field&gt;'
 # Optional request signing; set both or neither:
 export WISENT_APP_AGENT_ID=&lt;agent-id&gt;
-export WISENT_APP_AGENT_AUTH_SECRET=&lt;signing-secret&gt;
+export WISENT_APP_AGENT_AUTH_SECRET_ROLE='&lt;signing-role&gt;#&lt;field&gt;'
 export KRONIKA_MODEL=any
 </code></pre>
-<p><code>BRAMA_URL</code> and <code>BRAMA_API_KEY</code> are required for <code>check</code>, <code>write</code>, and
-<code>sync</code> (<code>MODEL_ROUTER_URL</code> and <code>MODEL_ROUTER_TOKEN</code> are accepted aliases).
-The agent ID and HMAC secret must be supplied together or not at all.
-<code>KRONIKA_MODEL</code> sets the default <code>--model</code> selector; unset, it is <code>any</code>.
-See <a href="/docs/configuration/">configuration</a>.</p>
+<p><code>BRAMA_URL</code> (or <code>MODEL_ROUTER_URL</code>) and
+<code>BRAMA_API_KEY_ROLE</code> are required for model commands. These role
+references are resolved through <code>stado credentials get --role</code>;
+secrets themselves do not belong in the environment. The signing identity
+and secret reference must be supplied together. Without Stado, explicitly
+select an owner-only <code>KRONIKA_CREDENTIALS_FILE</code> as described in
+<a href="/docs/configuration/">configuration</a>.
+<code>KRONIKA_MODEL</code> selects the route; unset, it is <code>any</code>.</p>
 <h2 id="audit-one-change">Audit one change</h2>
 <pre><code class="language-bash">kronika check --repo /path/to/project --base origin/main --json
 </code></pre>

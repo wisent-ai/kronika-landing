@@ -105,8 +105,8 @@ It does not schedule repositories, publish a site, or manage credentials:
 Brama owns client authorization, model selection, and inference, and the
 bearer plus optional HMAC identity are runtime secrets that never enter
 source or output. The repository also ships a separate documentation-site
-pipeline (<code>docs-cli</code>) that authors a typed content plan and gates it with
-mechanical validators; that is a distinct subsystem, described in
+pipeline (<code>kronika-site</code>) that authors a typed content plan and checks
+evidence, source-grounded vocabulary and coverage; it is described in
 <a href="/docs/site-pipeline/">site-pipeline</a>.</p>
 <h2 id="the-first-five-commands">The first five commands</h2>
 <pre><code class="language-bash">kronika init
