@@ -145,6 +145,10 @@ unreadable child help and repeated ancestor inventories fail with the complete
 command path and cause. Missing <code>plan.pages</code> or
 <code>brief.requiredKinds</code> is a named coverage failure, not an empty
 collection.</p>
+<p>Drift resolves leading command words through each parent's observed command
+inventory. Once a leaf is reached, following positional values are operands,
+not additional help subcommands. An unadvertised command word at a parent
+reports that parent's command path and the unresolved word.</p>
 <p>There is no prose quality score. The writing standard guides the author;
 the named validators enforce evidence, vocabulary, structure and coverage.</p>
 <h2 id="emit">Emit</h2>
