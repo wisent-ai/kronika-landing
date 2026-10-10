@@ -124,6 +124,11 @@ terms validator; it does not count as approval.</li>
 command advertised by the binary's <code>--help</code> has a
 <code>cli-reference</code> page at <code>cli/&lt;command&gt;</code> or below it.</li>
 </ul>
+<p>Detection requires a readable <code>Commands:</code> section with command
+names. CRLF output and a section ending with the response are accepted.
+An unreadable section is a CLI failure retaining the complete help text, not
+an empty command inventory. Coverage refuses a declared CLI without a successful,
+nonempty observed inventory, including older briefs that omitted commands.</p>
 <p>There is no prose quality score. The writing standard guides the author;
 the named validators enforce evidence, vocabulary, structure and coverage.</p>
 <h2 id="emit">Emit</h2>
