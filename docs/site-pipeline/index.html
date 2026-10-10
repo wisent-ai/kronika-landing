@@ -100,6 +100,10 @@ Brama to judge recurring undeclared words.</p>
 <h2 id="validate">Validate</h2>
 <p><code>pipeline/src/validate.mjs</code> runs five validators; the report contains
 each validator's failures, and all must pass:</p>
+<p>Source commands retain complete stdout, stderr and multiline failure details,
+without a pipeline-selected output byte ceiling. URL evidence failures identify
+the URL, HTTP status and complete response body, or the transport cause. A failed
+source read cannot support a publishing claim.</p>
 <ul>
 <li><strong>claims</strong> — every <code>claim.evidence</code> occurs in its named source.</li>
 <li><strong>drift</strong> — every documented command usage line and flag exists in the
