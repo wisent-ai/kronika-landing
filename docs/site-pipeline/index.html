@@ -149,6 +149,10 @@ collection.</p>
 inventory. Once a leaf is reached, following positional values are operands,
 not additional help subcommands. An unadvertised command word at a parent
 reports that parent's command path and the unresolved word.</p>
+<p>Each product invocation on its own line is checked against its own command
+help, even when comments or another command come first. Backslash-newline
+continuations remain part of the same invocation; flags on a later command
+are not compared against the first command's help.</p>
 <p>There is no prose quality score. The writing standard guides the author;
 the named validators enforce evidence, vocabulary, structure and coverage.</p>
 <h2 id="emit">Emit</h2>
