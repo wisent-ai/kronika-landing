@@ -53,6 +53,7 @@
         <p>Kronika resolves both refs, reads the <code>base...head</code> diff with rename detection and 40 lines of context, collects current safe sources, and asks Brama for a strict verdict. Text output starts with <code>Kronika documentation check: PASSED</code> or <code>BLOCKED</code>, followed by the summary and findings. JSON output contains <code>passed</code>, <code>summary</code>, <code>findings</code>, model, resolved SHAs, changed paths, diff bytes, source count, and skipped sources.</p>
         <p>The command writes no repository state. It exits <code>0</code> exactly when there are no blocker findings; warnings do not block. It exits <code>1</code> for a blocker or operational failure, and <code>2</code> for invalid command syntax, including a missing <code>--base</code>. Usage refusals print help and occur before credential resolution.</p>
         <p>A value-taking option refuses an empty value or a following option token. For example, <code>kronika check --base --json</code> reports the missing <code>--base</code> value with usage status <code>2</code>; it does not treat <code>--json</code> as a Git ref or attempt credential resolution.</p>
+        <p>Options belonging to another command are refused before credential resolution. For example, <code>check --apply</code> reports <code>check does not accept --apply</code>; checking never silently accepts an instruction to rewrite files.</p>
         <h2 id="refusals">Exact refusals</h2>
         <ul>
           <li><code>check requires --base &lt;ref&gt;</code></li>

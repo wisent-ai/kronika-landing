@@ -46,7 +46,7 @@
           <tr><td><code>--max-tokens &lt;n&gt;</code></td><td>none</td><td>Completion token budget for documents that state none.</td></tr>
           <tr><td><code>--dry-run</code></td><td>off</td><td>Reports and audits but writes no document or state, and never commits.</td></tr>
           <tr><td><code>--commit</code></td><td>off</td><td>Stages rewritten documents and state, then creates a sync commit when something changed.</td></tr>
-          <tr><td><code>--push</code></td><td>off</td><td>Runs <code>git push</code> after a sync commit; by itself it does not push.</td></tr>
+          <tr><td><code>--push</code></td><td>off</td><td>Runs <code>git push</code> after a sync commit; requires <code>--commit</code>, otherwise the invocation is refused before credential resolution.</td></tr>
           <tr><td><code>--json</code></td><td>off</td><td>Emits the machine-readable tick result.</td></tr>
         </tbody></table>
         <h2 id="output-and-state">Output and state</h2>
@@ -55,6 +55,7 @@
         <p>With <code>--commit</code>, sync commits rewritten outputs and state as <code>kronika sync: reconcile &lt;files&gt;</code>, or state alone as <code>kronika sync: advance documentation baselines</code>. <code>--push</code> pushes that commit.</p>
         <h2 id="refusals">Exact refusals and failed outcomes</h2>
         <ul>
+          <li><code>sync --push requires --commit</code>: usage refusal before any model or Git work.</li>
           <li><code>Sync manifest is missing: &lt;path&gt;. Declare the maintained documents first.</code></li>
           <li><code>Sync manifest is not valid JSON: &lt;path&gt;</code> or <code>Unsupported sync manifest schemaVersion in &lt;path&gt;</code></li>
           <li><code>Sync manifest declares no documents: &lt;path&gt;</code></li>
