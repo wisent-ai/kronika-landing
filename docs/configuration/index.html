@@ -84,8 +84,11 @@ Model operations refuse a missing URL or <code>BRAMA_API_KEY_ROLE</code>.
 Only role references travel in the environment: the bearer and signing secret
 are resolved when needed. The signing identity and secret must be supplied
 together. Credential resolution failures identify the role, field and failed
-operation. An explicitly selected credentials file must deny group and other
-access, contain valid JSON and hold a nonempty string for the requested field.</p>
+operation. The opened credentials descriptor must be a regular file owned by
+the caller and deny group and other access before any secret is read from that
+same descriptor. Its JSON must hold a nonempty string for the requested field.
+A present blank file declaration refuses instead of selecting Stado; file
+refusals name the declaration, path and actual cause.</p>
 <h2 id="the-brama-request">The Brama request</h2>
 <p>Every model interaction is one POST to <code>&lt;BRAMA_URL&gt;/v1/chat/completions</code>
 (trailing slashes on the URL are stripped) with an OpenAI-compatible body:
