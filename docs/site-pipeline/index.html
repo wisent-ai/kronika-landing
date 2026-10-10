@@ -100,6 +100,10 @@ Brama to judge recurring undeclared words.</p>
 <h2 id="validate">Validate</h2>
 <p><code>pipeline/src/validate.mjs</code> runs five validators; the report contains
 each validator's failures, and all must pass:</p>
+<p>An exception inside a validator is a failure of that named validator, with
+its observed cause in the report. Invalid evidence expressions, unreadable
+sources and malformed plan fields do not abort reporting for the remaining
+validators or count as approval. Emission still requires every validator to pass.</p>
 <p>Source commands retain complete stdout, stderr and multiline failure details,
 without a pipeline-selected output byte ceiling. URL evidence failures identify
 the URL, HTTP status and complete response body, or the transport cause. A failed
