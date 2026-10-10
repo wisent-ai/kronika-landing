@@ -104,6 +104,9 @@ each validator's failures, and all must pass:</p>
 without a pipeline-selected output byte ceiling. URL evidence failures identify
 the URL, HTTP status and complete response body, or the transport cause. A failed
 source read cannot support a publishing claim.</p>
+<p>A failed CLI help probe stops authoring before its Brama request, naming the
+binary, exit result, process error and both complete captured streams. Partial
+stdout from a failed command is not accepted as authoring evidence.</p>
 <ul>
 <li><strong>claims</strong> — every <code>claim.evidence</code> occurs in its named source.</li>
 <li><strong>drift</strong> — every documented command usage line and flag exists in the
