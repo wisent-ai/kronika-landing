@@ -138,6 +138,13 @@ nonempty observed inventory, including older briefs that omitted commands.</p>
 parser as detection. Commands added since the brief was recorded still need
 their pages. An unavailable binary, failed help command or unreadable command
 inventory fails coverage instead of accepting stale brief evidence.</p>
+<p>Coverage recursively reads each advertised command's own <code>--help</code>.
+Nested commands require paths such as <code>cli/fleet/create</code>, not merely
+the parent page. A leaf must expose a <code>Usage:</code> section. Failed or
+unreadable child help and repeated ancestor inventories fail with the complete
+command path and cause. Missing <code>plan.pages</code> or
+<code>brief.requiredKinds</code> is a named coverage failure, not an empty
+collection.</p>
 <p>There is no prose quality score. The writing standard guides the author;
 the named validators enforce evidence, vocabulary, structure and coverage.</p>
 <h2 id="emit">Emit</h2>
