@@ -46,6 +46,7 @@
         </ul>
         <h2 id="first-use">First use and replay</h2>
         <p><code>kronika onboarding</code> leads to this command. Onboarding completes only after init writes a valid manifest or accepts an identical retained one. <code>kronika onboarding --reset</code> replays the journey; repeating init is idempotent and completes the new attempt.</p>
+        <p>Import success is not a claim that onboarding bookkeeping succeeded. Text and JSON output retain <code>onboarding.completed</code> and, on failure, <code>onboarding.error</code> with the actual cause. The accepted manifest remains accepted and the command exits successfully even when onboarding state cannot be read. Correct that state problem and repeat <code>init</code>; the unchanged project can record first success without rewriting the manifest. The graphical import result shows the same independent outcome.</p>
         <p>The graphical importer submits to this same function and reads the
         accepted manifest back. It does not maintain a second parser, project
         store, or document copy.</p>
