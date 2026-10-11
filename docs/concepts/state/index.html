@@ -101,9 +101,10 @@ nothing, and a <code>failed</code> outcome deliberately does not advance.</p>
   on the state file and on <code>--commit</code>.</li>
 </ul>
 <h2 id="refusals">Refusals</h2>
-<p>Exact sentences from <code>loadSyncState</code> (<code>src/sync.ts</code>):</p>
+<p>Read and parse failures from <code>loadSyncState</code> (<code>src/sync/state.ts</code>) retain the path and original cause. Only <code>ENOENT</code> admits a fresh state; permission and symlink failures do not discard recorded baselines.</p>
 <ul>
-<li><code>Sync state is not valid JSON: &lt;path&gt;. Fix or delete it to re-baseline.</code></li>
+<li><code>Sync state cannot be read: &lt;path&gt;: &lt;operating-system cause&gt;</code></li>
+<li><code>Sync state is not valid JSON: &lt;path&gt;: &lt;parse cause&gt;. Fix or restore the saved baselines before continuing.</code></li>
 <li><code>Unsupported sync state schemaVersion in &lt;path&gt;</code></li>
 </ul>
 <p>And the per-document <code>failed</code> detail when a recorded baseline is gone,

@@ -79,10 +79,12 @@ path, the last commit the document was reconciled against:</p>
   }
 }
 </code></pre>
-<p>A missing state file means no document has a baseline yet. Invalid JSON in
-the state file is an error with one remedy: fix or delete it to re-baseline.
-The state file is meant to be committed beside the manifest — it is the
-auditable record of the loop.</p>
+<p>Only a missing state file means no document has a baseline yet. A filesystem
+read failure refuses with the path and operating-system cause; it does not reset
+the saved baselines. Invalid JSON reports its parse cause separately. Fix the
+named read problem or restore the recorded state before continuing. The state
+file is meant to be committed beside the manifest — it is the auditable record
+of the loop.</p>
 <h2 id="one-tick">One tick</h2>
 <p>Sync resolves <code>HEAD</code> once, then decides per manifest document:</p>
 <table>
