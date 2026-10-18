@@ -87,11 +87,12 @@ document by its baseline:</p>
 </table>
 <h2 id="baseline-before-generation">Baseline before generation</h2>
 <p>A document's first tick records where maintenance begins and touches
-nothing else. Captured verbatim:</p>
-<pre><code class="language-text">Kronika sync at 39825d883997
-  baseline        docs/usage.md — first sync records 39825d883997 as the baseline; nothing is generated on a first run
+nothing else. Captured, with the commit's first twelve characters shown as
+<code>&lt;sha12&gt;</code>:</p>
+<pre><code class="language-text">Kronika sync at &lt;sha12&gt;
+  baseline        docs/usage.md — first sync records &lt;sha12&gt; as the baseline; nothing is generated on a first run
 </code></pre>
-<p>The reasoning is in <code>src/sync.ts</code> itself: a first run that rewrote every
+<p>The reasoning is in <code>src/sync/sync.ts</code> itself: a first run that rewrote every
 document through a model would replace reviewed prose wholesale; sync
 maintains documents from the moment they enter the manifest.</p>
 <h2 id="advancing-without-churn">Advancing without churn</h2>
@@ -111,7 +112,7 @@ between two ticks.</p>
 <p><code>failed</code> never advances the baseline, so the next tick retries the same
 <code>baseline...HEAD</code> range — an outage cannot skip a defect past the loop.
 Captured with Brama unreachable:</p>
-<pre><code class="language-text">Kronika sync at 9d577cd6dad0
+<pre><code class="language-text">Kronika sync at &lt;sha12&gt;
   failed          docs/usage.md — audit did not complete: fetch failed
 </code></pre>
 <p>(exit status <code>1</code>; the state file still names the previous baseline).</p>
