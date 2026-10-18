@@ -101,7 +101,7 @@ export WISENT_APP_AGENT_ID=&lt;agent-id&gt;
 export WISENT_APP_AGENT_AUTH_SECRET_ROLE='&lt;signing-role&gt;#&lt;field&gt;'
 export KRONIKA_MODEL=any
 </code></pre>
-<p><code>BRAMA_URL</code> (or <code>MODEL_ROUTER_URL</code>) and
+<p><code>BRAMA_URL</code> and
 <code>BRAMA_API_KEY_ROLE</code> are required for model commands. These role
 references are resolved through <code>stado credentials get --role</code>;
 secrets themselves do not belong in the environment. The signing identity
@@ -147,10 +147,10 @@ declarations before the first sync; its established shape is:</p>
 <pre><code class="language-bash">kronika sync --repo /path/to/project --commit --push
 </code></pre>
 <p>The first run for each document records the current commit as its baseline
-and generates nothing — captured verbatim:</p>
+and generates nothing. The output has this shape, with the repository's commit in place of <code>&lt;commit&gt;</code>:</p>
 <pre><code class="language-console">$ kronika sync --commit
-Kronika sync at 39825d883997
-  baseline        docs/usage.md — first sync records 39825d883997 as the baseline; nothing is generated on a first run
+Kronika sync at &lt;commit&gt;
+  baseline        docs/usage.md — first sync records &lt;commit&gt; as the baseline; nothing is generated on a first run
   committed
 </code></pre>
 <p>Every later run audits only documents whose declared sources changed,

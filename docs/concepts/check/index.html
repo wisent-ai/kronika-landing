@@ -54,7 +54,7 @@ like a failed one.</p>
 <ol>
 <li>Parse flags; <code>check requires --base &lt;ref&gt;</code> is refused before anything
    runs.</li>
-<li>Require <code>BRAMA_URL</code> (or <code>MODEL_ROUTER_URL</code>) and
+<li>Require <code>BRAMA_URL</code> and
 resolve <code>BRAMA_API_KEY_ROLE</code> through the configured credential source
 (<a href="/docs/configuration/">configuration</a>).</li>
 <li>Collect the <a href="/docs/concepts/source-collection/">source collection</a> and resolve the
@@ -93,7 +93,7 @@ record:</p>
 passing run end to end are in <a href="/docs/walkthroughs/check/">walkthrough-check</a>.</p>
 <h2 id="the-gate-never-fails-open">The gate never fails open</h2>
 <p>Exit <code>1</code> covers every non-passing outcome, deliberately: blocker findings,
-an unresolvable ref, an oversized diff, an unreachable Brama, a timeout, a
+an unresolvable ref, an oversized diff, an unreachable Brama, a transport failure, a
 verdict that is not valid JSON, and a verdict whose <code>passed</code> contradicts
 its own blockers. A CI job therefore needs no error handling beyond the
 exit status:</p>

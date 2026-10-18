@@ -33,7 +33,7 @@
         <h2 id="invocation">Invocation</h2>
 <pre><code class="language-text">kronika write [options]
 </code></pre>
-        <p>No command option is required. Model access requires <code>BRAMA_URL</code> (or <code>MODEL_ROUTER_URL</code>) and <code>BRAMA_API_KEY_ROLE</code> in <code>ROLE#FIELD</code> form; the configured credential source resolves the secret. By default Kronika previews a generated <code>README.md</code> for the current directory.</p>
+        <p>No command option is required. Model access requires <code>BRAMA_URL</code> and <code>BRAMA_API_KEY_ROLE</code> in <code>ROLE#FIELD</code> form; the configured credential source resolves the secret. By default Kronika previews a generated <code>README.md</code> for the current directory.</p>
         <h2 id="inputs-and-options">Inputs and options</h2>
         <table><thead><tr><th>Option</th><th>Default</th><th>Effect</th></tr></thead><tbody>
           <tr><td><code>--repo &lt;path&gt;</code></td><td>current directory</td><td>Repository root.</td></tr>
@@ -52,7 +52,7 @@
         <p><code>--json</code> emits <code>outputPath</code>, <code>applied</code>, <code>model</code>, <code>sourceCount</code>, and <code>skipped</code>; a preview also includes <code>content</code>. A surrounding Markdown fence is removed and accepted output ends with one newline. Success exits <code>0</code>.</p>
         <h2 id="refusals">Exact refusals</h2>
         <ul>
-          <li><code>BRAMA_URL or MODEL_ROUTER_URL is required</code></li>
+          <li><code>BRAMA_URL is required: the address of the Brama gateway</code></li>
           <li><code>BRAMA_API_KEY_ROLE is required: ROLE#FIELD naming the role the item holding the Brama bearer plays, and its field</code></li>
           <li><code>Output is outside the repository: &lt;output&gt;</code></li>
           <li><code>No safe UTF-8 source files were selected</code></li>

@@ -33,7 +33,7 @@
         <h2 id="invocation">Invocation</h2>
 <pre><code class="language-text">kronika check --base &lt;ref&gt; [options]
 </code></pre>
-        <p><code>--base &lt;ref&gt;</code> is required. Model access requires <code>BRAMA_URL</code> (or <code>MODEL_ROUTER_URL</code>) and a <code>BRAMA_API_KEY_ROLE</code> reference in <code>ROLE#FIELD</code> form, resolved through the configured credential source. The repository must be a Git repository with both refs resolvable as commits. See <a href="/docs/configuration/">configuration</a>.</p>
+        <p><code>--base &lt;ref&gt;</code> is required. Model access requires <code>BRAMA_URL</code> and a <code>BRAMA_API_KEY_ROLE</code> reference in <code>ROLE#FIELD</code> form, resolved through the configured credential source. The repository must be a Git repository with both refs resolvable as commits. See <a href="/docs/configuration/">configuration</a>.</p>
         <h2 id="inputs-and-options">Inputs and options</h2>
         <table><thead><tr><th>Option</th><th>Default</th><th>Effect</th></tr></thead><tbody>
           <tr><td><code>--base &lt;ref&gt;</code></td><td>required</td><td>Base commit of the three-dot Git range.</td></tr>
@@ -60,7 +60,7 @@
           <li><code>Git commit cannot be resolved: &lt;ref&gt;</code></li>
           <li><code>Git diff cannot be read for &lt;base-sha&gt;...&lt;head-sha&gt;</code></li>
           <li><code>Git diff is &lt;n&gt; bytes, above --max-diff-bytes &lt;limit&gt;; narrow or split the change rather than auditing a truncated diff</code></li>
-          <li><code>BRAMA_URL or MODEL_ROUTER_URL is required</code> and <code>BRAMA_API_KEY_ROLE is required: ROLE#FIELD naming the role the item holding the Brama bearer plays, and its field</code></li>
+          <li><code>BRAMA_URL is required: the address of the Brama gateway</code> and <code>BRAMA_API_KEY_ROLE is required: ROLE#FIELD naming the role the item holding the Brama bearer plays, and its field</code></li>
           <li>Malformed model results are refused, beginning with <code>Kronika returned invalid documentation-check JSON</code>; a verdict inconsistent with blocker findings is <code>Kronika documentation check contradicts its blocker findings</code>.</li>
         </ul>
         <p>Source containment, symlink, existence, UTF-8, and byte-budget rules are the same as <a href="/docs/cli/sources/"><code>kronika sources</code></a>. Parser and runtime errors are written as <code>kronika: &lt;message&gt;</code> to stderr.</p>
