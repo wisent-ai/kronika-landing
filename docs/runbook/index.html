@@ -294,7 +294,7 @@ deliberately not advanced, next tick retries the same range:</p>
 <h2 id="kronika-site">kronika-site (site pipeline)</h2>
 <p>The separate pipeline reports one JSON object (or, with <code>--text</code>, one
 <code>path: value</code> line per field) and exits: <code>2</code> usage
-(<code>kronika-site &lt;productRepo&gt; --sources &lt;file&gt; [--plan &lt;file&gt;] [--out &lt;dir&gt;] [--model &lt;selector&gt;] [--text]</code>),
+(<code>kronika-site &lt;productRepo&gt; --sources &lt;file&gt; (--standard &lt;writing-standard.md&gt; | --plan &lt;file&gt;) [--out &lt;dir&gt;] [--model &lt;selector&gt;] [--text]</code>, and <code>authoring a plan needs --standard, the writing standard its pages follow, or --plan to load one already written</code>),
 <code>69</code> model infrastructure down (<code>brama endpoint unreachable: &lt;url&gt;
 (&lt;detail&gt;)</code> — a network failure, a response that could not be read, or a
 gateway-unavailable status, 502, 503 or 504, with its body),

@@ -40,7 +40,7 @@ mechanically. The pipeline is separate from the <code>kronika</code> CLI's
 <p><code>kronika-site</code> (<code>pipeline/src/run.mjs</code>) orchestrates detect → author (or load a plan) →
 validate → emit, stops at the first failing stage, and prints one final
 report, as JSON or, with <code>--text</code>, one <code>path: value</code> line per field:</p>
-<pre><code class="language-bash">kronika-site &lt;productRepo&gt; --sources &lt;file&gt; [--plan &lt;file&gt;] [--out &lt;dir&gt;] [--model &lt;selector&gt;] [--text]
+<pre><code class="language-bash">kronika-site &lt;productRepo&gt; --sources &lt;file&gt; (--standard &lt;writing-standard.md&gt; | --plan &lt;file&gt;) [--out &lt;dir&gt;] [--model &lt;selector&gt;] [--text]
 </code></pre>
 <p>Exit codes: <code>0</code> all green, <code>1</code> a stage failed, <code>2</code> usage error, <code>69</code> model
 infrastructure down. Each stage module also runs standalone from the
@@ -92,8 +92,11 @@ surface; only declared, probed surfaces count. The completion-gate formula:</p>
 <h2 id="author">Author</h2>
 <p>The model authors <code>plan.json</code> through Brama, conforming to the closed
 schema in <code>pipeline/schemas/plan.schema.json</code>. The authoring prompt is built
-from <code>brief.json</code>, the declared sources, and
-<code>pipeline/WRITING-STANDARD.md</code> — the injected writing standard. The endpoint
+from <code>brief.json</code>, the declared sources, and the writing standard the
+caller names with <code>--standard &lt;file&gt;</code>, read whole and injected into the
+prompt; the pipeline ships none. Authoring without <code>--standard</code> or
+<code>--plan</code> is refused before detection with exit 2, and a standard that
+cannot be read stops the stage as <code>author_failed</code>, naming the flag. The endpoint
 is <code>BRAMA_URL</code> when set, otherwise the address published in
 <code>~/.stado/forwards/brama.local</code>. Neither means an explicit
 <code>not_configured</code> refusal naming both declarations; no address is built in.
