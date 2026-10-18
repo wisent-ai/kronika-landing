@@ -240,7 +240,7 @@ rejected before mutation. The manifest is the exact file consumed later by
 <code>kronika sync</code>.</p>
 <h2 id="kronika-gui">kronika gui</h2>
 <p>Hosts the installed <a href="/docs/gui/">graphical importer</a> on
-<code>127.0.0.1</code> and prints its exact per-session URL without opening a
+the IPv4 loopback address and prints its exact per-session URL without opening a
 browser. The repository is fixed by <code>--repo</code>; the form exposes document
 and evidence selections, manifest destination, standing instruction, and
 explicit conflict replacement. Submission calls the same exported
@@ -298,7 +298,7 @@ summary, and one line per finding. <code>--json</code> emits:</p>
 <p>Exit <code>0</code> when the audit passes (no blockers); exit <code>1</code> when it reports a
 blocker or fails — the gate never fails open. Warnings never block. The
 audit contract itself — "never require churn merely because source
-changed" — is enforced by the system prompt in <code>src/checker.ts</code>; the
+changed" — is enforced by the system prompt in <code>src/docs/checker.ts</code>; the
 verdict and finding vocabulary are <a href="/docs/concepts/check/">concepts/check</a>,
 <a href="/docs/concepts/audit/">concepts/audit</a>,
 <a href="/docs/concepts/finding/">concepts/finding</a>, and
@@ -311,8 +311,8 @@ stdout and changes no file. With <code>--apply</code> it atomically replaces
 <code>--output</code>: the content is written to a temporary file beside the target and
 renamed into place, preserving the existing file mode. The output path must
 stay inside the repository. Model output is normalized — a surrounding
-Markdown code fence is stripped, content under 20 characters or containing
-NUL is rejected — and always ends with a newline.</p>
+Markdown code fence is stripped, empty content or content containing NUL is
+rejected — and always ends with a newline.</p>
 <p><code>--json</code> emits <code>outputPath</code>, <code>applied</code>, <code>model</code>, <code>sourceCount</code>, <code>skipped</code>,
 and, when not applied, the full <code>content</code>. The applied confirmation line is
 <code>Wrote &lt;path&gt; from &lt;n&gt; source files via Brama.</code></p>

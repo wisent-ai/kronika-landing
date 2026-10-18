@@ -103,13 +103,13 @@ use the CLI's <code>kronika: &lt;message&gt;</code> stderr boundary.</p>
 <table>
 <thead><tr><th>Sentence</th><th>Meaning / fix</th></tr></thead>
 <tbody>
-<tr><td><code>request host does not match this Kronika GUI session</code></td><td>the request used an alias, rebound host, or stale URL; open the exact <code>127.0.0.1:&lt;port&gt;</code> URL printed by this process</td></tr>
+<tr><td><code>request host does not match this Kronika GUI session</code></td><td>the request used an alias, rebound host, or stale URL; open the exact loopback URL, with its port, printed by this process</td></tr>
 <tr><td><code>Kronika GUI session token is missing or invalid</code></td><td>the URL fragment is absent or belongs to another process; reopen the exact current session URL</td></tr>
 <tr><td><code>request origin does not match this Kronika GUI session</code></td><td>a mutation did not originate from the exact local workspace; it is refused as cross-origin</td></tr>
 <tr><td><code>request exceeds 65536 bytes</code></td><td>the JSON selection is over the pre-parse request cap; narrow the document/source lists or instruction</td></tr>
 <tr><td><code>request content type must be application/json</code> / <code>request body is not valid JSON</code></td><td>a non-workspace or damaged request reached the API; reload the current printed URL</td></tr>
-<tr><td><code>documents must be an array of at most 256 paths</code> / <code>sources must be an array of at most 256 paths</code></td><td>the selection exceeds the bounded request contract; narrow it</td></tr>
-<tr><td><code>manifestPath must contain 1 to 4096 characters</code></td><td>the destination is blank or oversized; use a repository-relative manifest path such as <code>kronika.sync.json</code></td></tr>
+<tr><td><code>documents must be an array of paths</code> / <code>sources must be an array of paths</code>, <code>… entries must be strings</code>, <code>… entries must not be empty</code></td><td>the selection is not a list of non-empty path strings; reload the current printed URL and select again</td></tr>
+<tr><td><code>manifestPath must be a string</code> / <code>manifestPath must not be empty</code></td><td>the destination is missing or blank; use a repository-relative manifest path such as <code>kronika.sync.json</code></td></tr>
 </tbody>
 </table>
 <h2 id="project-adoption-refusals">Project adoption refusals</h2>
@@ -133,7 +133,7 @@ boundary and therefore mean the same thing in CLI and GUI results:</p>
 </tbody>
 </table>
 <h2 id="selection-refusals">Selection refusals</h2>
-<p>From <code>src/sources.ts</code> and <code>src/writer.ts</code>; all before any network call:</p>
+<p>From <code>src/docs/sources.ts</code> and <code>src/docs/writer.ts</code>; all before any network call:</p>
 <table>
 <thead>
 <tr>
@@ -205,7 +205,7 @@ or private deployment directory</code> · <code>credential or generated lock fil
 </tbody>
 </table>
 <h2 id="transport-and-brama-answers">Transport and Brama answers</h2>
-<p>From <code>src/brama.ts</code>:</p>
+<p>From <code>src/docs/model/brama.ts</code>:</p>
 <table>
 <thead>
 <tr>
@@ -229,14 +229,14 @@ or private deployment directory</code> · <code>credential or generated lock fil
 </tbody>
 </table>
 <h2 id="model-output-refusals">Model output refusals</h2>
-<p>The model's answer is validated, never trusted. From <code>src/writer.ts</code>
+<p>The model's answer is validated, never trusted. From <code>src/docs/writer.ts</code>
 (write/rewrite):</p>
 <ul>
-<li><code>Brama returned documentation that is too short</code> † — under 20 characters
-  after normalization</li>
+<li><code>Brama returned empty documentation</code> — nothing remained after removing one
+  surrounding Markdown code fence and surrounding whitespace</li>
 <li><code>Brama returned invalid NUL content</code></li>
 </ul>
-<p>From <code>src/checker.ts</code> (audit verdicts):</p>
+<p>From <code>src/docs/checker.ts</code> (audit verdicts):</p>
 <ul>
 <li><code>Kronika returned invalid documentation-check JSON</code> † — the answer was not
   parseable JSON (one surrounding code fence is tolerated)</li>
