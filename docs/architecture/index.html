@@ -45,7 +45,7 @@ separate site pipeline.</p>
                         |
                         v
                  BramaClient — POST &lt;BRAMA_URL&gt;/v1/chat/completions
-                 bearer + optional HMAC body signature, hard timeout
+                 bearer + optional HMAC body signature
                         |
                         v
         write: Markdown  --normalize--&gt;  preview stdout | atomic --apply
@@ -53,10 +53,10 @@ separate site pipeline.</p>
                         ^
                         |
    sync loop: manifest + state decide, per document, whether any call
-   happens at all (baseline / advanced / audit / rewrite)  — src/sync.ts
+   happens at all (baseline / advanced / audit / rewrite)  — src/sync/sync.ts
 </code></pre>
 <p>Every model interaction in the <code>kronika</code> CLI is exactly one chat completion
-(<code>src/brama.ts</code>). There is no streaming, no tool use, no retry loop, no
+(<code>src/docs/model/brama.ts</code>). There is no streaming, no tool use, no retry loop, no
 second provider: if Brama does not answer, the verb fails with the
 transport's own sentence (<a href="/docs/runbook/">runbook</a>).</p>
 <h2 id="what-kronika-owns">What Kronika owns</h2>
@@ -67,14 +67,14 @@ transport's own sentence (<a href="/docs/runbook/">runbook</a>).</p>
   Brama configuration at all (<a href="/docs/concepts/source-collection/">concepts/source-collection</a>).</li>
 <li><strong>The verdict contract.</strong> Model answers are structured claims that get
   validated, not trusted: strict JSON verdicts for audits, normalized
-  Markdown for rewrites (fence stripped, too-short and NUL content refused).</li>
+  Markdown for rewrites (fence stripped, empty and NUL content refused).</li>
 <li><strong>The loop's memory.</strong> <code>kronika.sync.json</code> (intent) and
   <code>kronika.sync-state.json</code> (progress) live in the target repository and are
   meant to be committed; the audit trail is the Git log itself
   (<a href="/docs/concepts/manifest/">concepts/manifest</a>, <a href="/docs/concepts/state/">concepts/state</a>).</li>
 <li><strong>Atomicity of the one write it performs.</strong> <code>--apply</code> writes a temporary
   file beside the target and renames it into place, preserving mode; a
-  failed write leaves the old document intact (<code>src/writer.ts</code>).</li>
+  failed write leaves the old document intact (<code>src/docs/writer.ts</code>).</li>
 </ul>
 <h2 id="what-kronika-does-not-own">What Kronika does not own</h2>
 <ul>
