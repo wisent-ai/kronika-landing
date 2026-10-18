@@ -291,14 +291,18 @@ deliberately not advanced, next tick retries the same range:</p>
 </tr>
 </tbody>
 </table>
-<h2 id="docs-cli-site-pipeline">docs-cli (site pipeline)</h2>
-<p>The separate pipeline reports one JSON object and exits: <code>2</code> usage
-(<code>node src/run.mjs &lt;productRepo&gt; --sources &lt;file&gt; [--plan &lt;file&gt;] [--out &lt;dir&gt;]</code>),
+<h2 id="kronika-site">kronika-site (site pipeline)</h2>
+<p>The separate pipeline reports one JSON object (or, with <code>--text</code>, one
+<code>path: value</code> line per field) and exits: <code>2</code> usage
+(<code>kronika-site &lt;productRepo&gt; --sources &lt;file&gt; [--plan &lt;file&gt;] [--out &lt;dir&gt;] [--model &lt;selector&gt;] [--text]</code>),
 <code>69</code> model infrastructure down (<code>brama endpoint unreachable: &lt;url&gt;
-(&lt;detail&gt;)</code> — network failure or the resolver adapter answering 502/503/504),
+(&lt;detail&gt;)</code> — a network failure, a response that could not be read, or a
+gateway-unavailable status, 502, 503 or 504, with its body),
 <code>1</code> any failing stage, <code>0</code> all green. An answering endpoint with another bad
-status is <code>brama answered HTTP &lt;status&gt;: &lt;body&gt;</code>; a shapeless answer is
-<code>brama answer had no choices[0].message.content</code>. See
+status is <code>brama at &lt;url&gt; answered HTTP &lt;status&gt;: &lt;body&gt;</code>; an answer
+without the one required call is <code>brama at &lt;url&gt; answered HTTP &lt;status&gt; without
+calling &lt;answer&gt;; body: &lt;body&gt;</code> or <code>brama at &lt;url&gt; did not answer by exactly
+one call of &lt;answer&gt;; body: &lt;body&gt;</code>. See
 <a href="/docs/site-pipeline/">site-pipeline</a>.</p>
 <p>† captured by running the built CLI against a toy repository; the remainder
 quoted from <code>src/</code>.</p>

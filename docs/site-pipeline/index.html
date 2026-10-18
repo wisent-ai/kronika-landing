@@ -37,16 +37,20 @@ the terms validator. Evidence, structure and command coverage are checked
 mechanically. The pipeline is separate from the <code>kronika</code> CLI's
 <a href="/docs/sync/">sync loop</a>.</p>
 <h2 id="stages">Stages</h2>
-<p><code>pipeline/src/run.mjs</code> orchestrates detect → author (or load a plan) →
+<p><code>kronika-site</code> (<code>pipeline/src/run.mjs</code>) orchestrates detect → author (or load a plan) →
 validate → emit, stops at the first failing stage, and prints one final
-JSON report:</p>
-<pre><code class="language-bash">node pipeline/src/run.mjs &lt;productRepo&gt; --sources &lt;file&gt; [--plan &lt;file&gt;] [--out &lt;dir&gt;] [--model &lt;selector&gt;]
+report, as JSON or, with <code>--text</code>, one <code>path: value</code> line per field:</p>
+<pre><code class="language-bash">kronika-site &lt;productRepo&gt; --sources &lt;file&gt; [--plan &lt;file&gt;] [--out &lt;dir&gt;] [--model &lt;selector&gt;] [--text]
 </code></pre>
 <p>Exit codes: <code>0</code> all green, <code>1</code> a stage failed, <code>2</code> usage error, <code>69</code> model
-infrastructure down. Each stage also runs standalone via the npm scripts
-<code>docs:detect</code>, <code>docs:validate</code>, and <code>docs:emit</code>.</p>
+infrastructure down. Each stage module also runs standalone from the
+<code>pipeline/</code> directory, with <code>--help</code> printing its usage:</p>
+<pre><code class="language-bash">node src/stages/detect.mjs &lt;productRepo&gt; --sources &lt;docs-sources.json&gt; [--out brief.json] [--text]
+node src/stages/validate.mjs --plan plan.json --brief brief.json [--repo path] [--text]
+node src/stages/emit.mjs --plan plan.json --out &lt;dir&gt; [--text]
+</code></pre>
 <h2 id="detect">Detect</h2>
-<p><code>pipeline/src/detect.mjs</code> reads the product repository's <code>docs-sources.json</code>
+<p><code>pipeline/src/stages/detect.mjs</code> reads the product repository's <code>docs-sources.json</code>
 — which must declare <code>product</code> and may declare <code>binary</code>, <code>routes</code>, <code>config</code>,
 <code>changelog</code>, <code>limits</code>, and a <code>docs</code> map of plain evidence documents — probes
 each declared surface, and computes <code>brief.json</code>. Detection never invents a
@@ -105,7 +109,7 @@ sampling settings, and HTTP failures retain the full response body.
 <code>--plan &lt;file&gt;</code> skips authoring, but validation can still call
 Brama to judge recurring undeclared words.</p>
 <h2 id="validate">Validate</h2>
-<p><code>pipeline/src/validate.mjs</code> runs five validators; the report contains
+<p><code>pipeline/src/stages/validate.mjs</code> runs five validators; the report contains
 each validator's failures, and all must pass:</p>
 <p>An exception inside a validator is a failure of that named validator, with
 its observed cause in the report. Invalid evidence expressions, unreadable
@@ -173,7 +177,7 @@ only run-owned fixture copies are removed.</p>
 <p>There is no prose quality score. The writing standard guides the author;
 the named validators enforce evidence, vocabulary, structure and coverage.</p>
 <h2 id="emit">Emit</h2>
-<p><code>pipeline/src/emit.mjs</code> turns a validated plan into a <code>DocPage</code> data module
+<p><code>pipeline/src/stages/emit.mjs</code> turns a validated plan into a <code>DocPage</code> data module
 — <code>docs.ts</code> in the <code>--out</code> directory — for the consuming site's
 <code>DocumentationLayout</code>, along with the navigation grouping. Publication is
 the consuming site's CI concern: deploy only on all-green.</p>
