@@ -34,7 +34,7 @@ re-author everything. A finding is the unit that prevents that: one named,
 evidence-grounded documentation defect (or observation), specific enough to
 be corrected without touching anything else.</p>
 <h2 id="shape">Shape</h2>
-<p>Every finding in a verdict is validated field by field (<code>src/checker.ts</code>):</p>
+<p>Every finding in a verdict is validated field by field (<code>src/docs/checker.ts</code>):</p>
 <table>
 <thead>
 <tr>
@@ -95,7 +95,7 @@ blocker findings", or the whole verdict is rejected with
 <code>Kronika documentation check contradicts its blocker findings</code>.</p>
 <h2 id="what-blockers-become">What blockers become</h2>
 <p>In the <a href="/docs/sync/">sync loop</a>, a blocked audit's blockers are compiled into
-the rewrite instruction (<code>src/sync.ts</code>), one line each:</p>
+the rewrite instruction (<code>src/sync/state.ts</code>), one line each:</p>
 <pre><code class="language-text">- [&lt;code&gt;] &lt;message&gt; Required change: &lt;requiredChange&gt;
 </code></pre>
 <p>prefixed by the document's standing manifest instruction and the fixed

@@ -36,7 +36,7 @@ machine-checked verdict. <code>kronika check</code> runs one audit directly; the
 <a href="/docs/sync/">sync loop</a> runs one per drifted document.</p>
 <h2 id="what-it-is">What it is</h2>
 <p>An audit is built from two inputs and answered by one model call
-(<code>src/checker.ts</code>):</p>
+(<code>src/docs/checker.ts</code>):</p>
 <ul>
 <li><strong>The change</strong> — <code>--base</code> and <code>--head</code> resolved to commit SHAs
   (<code>git rev-parse --verify &lt;ref&gt;^{commit}</code>), the changed paths
@@ -88,7 +88,7 @@ kronika: Git diff is 456 bytes, above --max-diff-bytes 1; narrow or split the ch
 kronika: Kronika returned invalid documentation-check JSON
 kronika: Kronika documentation check contradicts its blocker findings
 </code></pre>
-<p>Plus, from <code>src/checker.ts</code>: <code>Git diff cannot be read for &lt;base&gt;...&lt;head&gt;</code>,
+<p>Plus, from <code>src/docs/checker.ts</code>: <code>Git diff cannot be read for &lt;base&gt;...&lt;head&gt;</code>,
 <code>Kronika documentation check is not an object</code>, <code>… has no boolean passed
 field</code>, <code>… has no summary</code>, <code>… has no findings array</code>, and the per-finding
 sentences listed in <a href="/docs/concepts/finding/">finding</a>. Transport failures surface the

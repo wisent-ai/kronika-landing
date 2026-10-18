@@ -35,7 +35,7 @@ document's <a href="/docs/concepts/baseline/">baseline</a> and <code>HEAD</code>
 <a href="/docs/concepts/manifest/">manifest</a> declares as that document's evidence — plus the
 document itself.</p>
 <h2 id="what-it-is">What it is</h2>
-<p>Per document, one Git question (<code>changedPathsFor</code>, <code>src/sync.ts</code>):</p>
+<p>Per document, one Git question (<code>changedPathsFor</code>, <code>src/sync/state.ts</code>):</p>
 <pre><code class="language-text">git diff --name-only --find-renames &lt;baseline&gt;...&lt;HEAD&gt; -- &lt;sources...&gt; &lt;output&gt;
 </code></pre>
 <ul>

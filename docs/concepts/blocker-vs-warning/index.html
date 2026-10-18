@@ -34,7 +34,7 @@
 carries the whole gating semantics: blockers gate and drive rewrites;
 warnings inform and do nothing else.</p>
 <h2 id="the-standard">The standard</h2>
-<p>The definition lives in the audit's system prompt (<code>src/checker.ts</code>) and is
+<p>The definition lives in the audit's system prompt (<code>src/docs/checker.ts</code>) and is
 the contract every verdict is held to:</p>
 <ul>
 <li>A <strong>blocker</strong> is a concrete documentation defect caused or exposed by
@@ -93,7 +93,7 @@ src/greet.js adds a --shout flag that docs/usage.md does not mention.
 </code></pre>
 <h2 id="what-blockers-become">What blockers become</h2>
 <p>In the sync loop, blockers — and only blockers — are compiled into the
-rewrite instruction (<code>rewriteInstruction</code>, <code>src/sync.ts</code>); the brief's
+rewrite instruction (<code>rewriteInstruction</code>, <code>src/sync/state.ts</code>); the brief's
 exact line format is in <a href="/docs/concepts/finding/#what-blockers-become">finding</a>.
 Warnings are deliberately excluded: a rewrite corrects named defects, and
 a warning names none.</p>

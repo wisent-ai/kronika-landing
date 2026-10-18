@@ -35,7 +35,7 @@ call puts in front of Brama. Nothing reaches a prompt that is not in the
 collection, and everything that was considered but excluded is named with
 its reason.</p>
 <h2 id="what-it-is">What it is</h2>
-<p><code>collectSources</code> (<code>src/sources.ts</code>) returns one <code>SourceCollection</code>:</p>
+<p><code>collectSources</code> (<code>src/docs/sources.ts</code>) returns one <code>SourceCollection</code>:</p>
 <table>
 <thead>
 <tr>
@@ -123,7 +123,7 @@ and the exact priority ranks — are in <a href="/docs/sources/">sources</a>.</p
   audit and rewrite — there is one boundary, not four.</li>
 </ul>
 <h2 id="refusals">Refusals</h2>
-<p>Exact sentences from <code>src/sources.ts</code>:</p>
+<p>Exact sentences from <code>src/docs/sources.ts</code>:</p>
 <ul>
 <li><code>Source is outside the repository: &lt;path&gt;</code></li>
 <li><code>Source does not exist: &lt;path&gt;</code></li>
@@ -134,7 +134,7 @@ and the exact priority ranks — are in <a href="/docs/sources/">sources</a>.</p
   validates its numeric flags first)</li>
 </ul>
 <p><code>write</code> additionally refuses an empty collection:
-<code>No safe UTF-8 source files were selected</code> (<code>src/writer.ts</code>).</p>
+<code>No safe UTF-8 source files were selected</code> (<code>src/docs/writer.ts</code>).</p>
 <h2 id="not-to-be-confused-with">Not to be confused with</h2>
 <ul>
 <li><strong>The <a href="/docs/concepts/manifest/">sync manifest</a></strong> — declares <em>which</em> documents are
