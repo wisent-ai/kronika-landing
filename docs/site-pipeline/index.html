@@ -111,6 +111,17 @@ An unreachable endpoint fails authoring with exit <code>69</code>. Brama owns
 sampling settings, and HTTP failures retain the full response body.
 <code>--plan &lt;file&gt;</code> skips authoring, but validation can still call
 Brama to judge recurring undeclared words.</p>
+<p>The authoring request carries the selected model and the complete messages, and
+asks for the plan as the arguments of one required function call whose
+parameters are a strict JSON Schema, so the plan is the model's answer itself
+and never JSON picked out of prose. That answer schema is derived from
+<code>plan.schema.json</code>: a field the plan leaves optional is asked for as nullable
+and left out of the plan when null, and <code>sources</code> is asked for as a list of
+<code>{ key, value }</code> entries that becomes the named registry again. A key named
+twice, a value of the wrong shape, an answer without exactly that one call, or
+arguments that are not one JSON object stops authoring with <code>author_failed</code> and
+that cause. The plan read back is then held to the whole plan schema, its length
+and count bounds included.</p>
 <h2 id="validate">Validate</h2>
 <p><code>pipeline/src/stages/validate.mjs</code> runs five validators; the report contains
 each validator's failures, and all must pass:</p>
