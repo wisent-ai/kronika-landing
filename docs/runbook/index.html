@@ -30,45 +30,86 @@
         <div class="article-kicker">Kronika documentation</div>
         <h1>Runbook</h1>
         <p>Kronika failed — what does the sentence mean, and what do you check? Every
-failure is one line on stderr, <code>kronika: &lt;message&gt;</code>, exit status <code>1</code>; sync
+failure is one line on stderr, <code>kronika: &lt;message&gt;</code>, exit status <code>1</code>, or
+<code>2</code> with the help when the command line itself is refused; sync
 additionally reports per-document <code>failed</code> outcomes and exits <code>1</code> when any
 document failed. Every sentence below exists verbatim in <code>src/</code> and the
 marked ones were captured by running the CLI.</p>
 <h2 id="flags-and-commands">Flags and commands</h2>
+<p>A refused invocation exits <code>2</code> and prints the help after the refusal.
+Each refusal is one line: the sentence below, then <code>: </code> and why it was
+refused for this command line, then <code>; </code> and what to write instead.</p>
 <table>
 <thead>
 <tr>
 <th>Sentence</th>
-<th>Meaning / fix</th>
+<th>Causes it names / fix it states</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>Unknown command: &lt;word&gt;</code> †</td>
-<td>first argument is not <code>init</code>, <code>gui</code>, <code>check</code>, <code>write</code>, <code>sources</code>, <code>sync</code>, <code>onboarding</code>, or help</td>
+<td>the first word is none of <code>check</code>, <code>write</code>, <code>sources</code>, <code>sync</code>, <code>init</code>, <code>gui</code>, <code>onboarding</code>, or an option came before any command; put one of those first</td>
 </tr>
 <tr>
-<td><code>Unknown option: &lt;flag&gt;</code> †</td>
-<td>flag not in <a href="/docs/cli/">cli</a>; one parser serves all commands</td>
+<td><code>&lt;command&gt; does not accept &lt;word&gt;</code> †</td>
+<td>the option belongs to another command (named), no command has that option (check its spelling), or the word is not an option and the command takes no positional word; the line lists the options the command accepts</td>
 </tr>
 <tr>
 <td><code>&lt;flag&gt; requires a value</code> †</td>
-<td>value-taking flag at end of argv or followed by nothing</td>
+<td>the flag is the last word, the word after it is blank, or the word after it is another option (<code>another option cannot supply it</code>); write the value right after the flag</td>
 </tr>
 <tr>
 <td><code>&lt;flag&gt; must be a positive integer</code> †</td>
-<td>numeric flags (<code>--max-*</code>, <code>--port</code>) reject zero, negatives, and non-integers</td>
+<td>the value is not a number, not a whole number, zero, negative, or above 9007199254740991; write a whole number of 1 or more</td>
 </tr>
 <tr>
-<td><code>--port must be between 1 and 65535</code></td>
-<td>the graphical importer port exceeds TCP's maximum; omit <code>--port</code> for an available operating-system-assigned port</td>
+<td><code>--port must be between 1 and 65535</code> †</td>
+<td>the port is above TCP's 16-bit maximum; choose a free port of at most 65535, or omit <code>--port</code> for an operating-system-assigned one</td>
 </tr>
 <tr>
 <td><code>check requires --base &lt;ref&gt;</code> †</td>
-<td><code>check</code> has no default base; pass the ref to audit from</td>
+<td><code>check</code> has no change to audit without a base; name the commit the change starts from, for example <code>--base origin/main</code></td>
+</tr>
+<tr>
+<td><code>onboarding accepts one action; --&lt;first&gt; conflicts with --&lt;second&gt;</code> †</td>
+<td>one run performs exactly one action; run each as its own command</td>
+</tr>
+<tr>
+<td><code>sync --push requires --commit</code> †</td>
+<td>without <code>--commit</code> sync makes no commit to push; add <code>--commit</code> or leave out <code>--push</code></td>
+</tr>
+<tr>
+<td><code>Unknown option: &lt;flag&gt;</code></td>
+<td>a command lists an option its parser reads no value for; this is a Kronika defect, report it with the message</td>
 </tr>
 </tbody>
 </table>
+<h2 id="startup">Starting the CLI and the graphical workspace</h2>
+<p>The quick start runs <code>npm install</code> and <code>npm run build</code>; until both exit
+<code>0</code> there is no <code>dist/src/cli.js</code> to run, so the first error to read is
+the build's own. These refusals exit <code>1</code> without the help:</p>
+<table>
+<thead><tr><th>Sentence</th><th>Causes it names / fix it states</th></tr></thead>
+<tbody>
+<tr><td><code>Repository &lt;path&gt; (from --repo) cannot be used</code> †</td><td>nothing exists at the path (<code>ENOENT</code>), a component of it is a file (<code>ENOTDIR</code>), this user may not look it up (<code>EACCES</code>/<code>EPERM</code>), a symbolic-link loop (<code>ELOOP</code>), a path too long (<code>ENAMETOOLONG</code>), or another operating-system refusal quoted whole; pass <code>--repo</code> an existing repository directory you can read. <code>sources</code> and <code>gui</code> refuse this first, <code>gui</code> before it opens a socket; <code>check</code> and <code>write</code> after their Brama configuration is read</td></tr>
+<tr><td><code>Repository is not a directory: &lt;path&gt;</code> †</td><td><code>--repo</code> names a file; pass the repository directory, not a file inside it</td></tr>
+<tr><td><code>the graphical workspace cannot listen on 127.0.0.1:&lt;port&gt;</code> †</td><td>another process listens there (<code>EADDRINUSE</code>; <code>lsof</code> names it), the port is refused to this user (<code>EACCES</code>; ports below 1024 are privileged), no loopback interface (<code>EADDRNOTAVAIL</code>), no file descriptor left (<code>EMFILE</code>/<code>ENFILE</code>), or another code quoted whole; each states its fix, and omitting <code>--port</code> lets the operating system choose a free port</td></tr>
+<tr><td><code>the graphical workspace cannot start: Node reported its listening socket as …</code></td><td>Node returned no TCP address for a socket it opened; a Node or Kronika defect, report it with <code>node --version</code></td></tr>
+</tbody>
+</table>
+<p>The startup qualification <code>node tests/startup/cli.mjs</code> builds the
+checkout with <code>npm run build</code>, runs <code>init</code>, <code>sources</code> and <code>gui</code>
+against an isolated project, then runs each cause marked † in the two tables
+above, and the two Brama environment refusals below, as a real process and
+requires its sentence, cause, fix and exit status. The causes that cannot be
+staged without damaging the machine (<code>EADDRNOTAVAIL</code>, <code>EMFILE</code>,
+<code>ENFILE</code>, a socket without a TCP address, the parser defect) are not run.
+Declare <code>KRONIKA_TEST_SOURCE_REVISION</code> (the files run must be exactly
+that commit), <code>KRONIKA_TEST_SUCCESS_EXIT</code>, <code>KRONIKA_TEST_USAGE_EXIT</code> and
+<code>KRONIKA_TEST_OPERATIONAL_EXIT</code>. Commands, outputs and exits stay under
+<code>.build/startup/&lt;run&gt;/report.json</code>; a privileged port this user may bind
+is listed there as unreproduced, not passed.</p>
 <h2 id="environment">Environment</h2>
 <table>
 <thead>
@@ -79,12 +120,12 @@ marked ones were captured by running the CLI.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>BRAMA_URL is required: the address of the Brama gateway</code> †</td>
-<td><code>check</code>/<code>write</code>/<code>sync</code> need an endpoint; <code>init</code>, <code>gui</code>, <code>sources</code>, onboarding, and help do not</td>
+<td><code>BRAMA_URL is required</code> †</td>
+<td><code>check</code>/<code>write</code>/<code>sync</code> ask a model; the line says whether <code>BRAMA_URL</code> is unset or empty and to export it, or to run <code>sources</code>, which needs no model. <code>init</code>, <code>gui</code>, <code>sources</code>, onboarding, and help do not read it</td>
 </tr>
 <tr>
-<td><code>BRAMA_API_KEY_ROLE is required: ROLE#FIELD naming the role the item holding the Brama bearer plays, and its field</code></td>
-<td>Declare the credential role reference; the bearer is resolved from the configured credential source, not supplied as an environment secret.</td>
+<td><code>BRAMA_API_KEY_ROLE is required: ROLE#FIELD naming the role the item holding the Brama bearer plays, and its field</code> †</td>
+<td>the line says whether it is unset or empty; export <code>BRAMA_API_KEY_ROLE=&lt;role&gt;#&lt;field&gt;</code> for the item Stado answers, or set <code>KRONIKA_CREDENTIALS_FILE</code>. The bearer is resolved from that source, never supplied as an environment secret.</td>
 </tr>
 <tr>
 <td><code>Brama agent ID and HMAC secret must be supplied together</code> †</td>
@@ -99,7 +140,8 @@ marked ones were captured by running the CLI.</p>
 <p>See <a href="/docs/configuration/">configuration</a> for what each variable does.</p>
 <h2 id="graphical-importer">Graphical importer</h2>
 <p>Session and request refusals are returned in the workspace; startup failures
-use the CLI's <code>kronika: &lt;message&gt;</code> stderr boundary.</p>
+use the CLI's <code>kronika: &lt;message&gt;</code> stderr boundary and are listed under
+<a href="#startup">starting the CLI and the graphical workspace</a>.</p>
 <table>
 <thead><tr><th>Sentence</th><th>Meaning / fix</th></tr></thead>
 <tbody>

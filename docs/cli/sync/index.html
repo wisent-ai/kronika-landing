@@ -61,7 +61,7 @@
           <li><code>Sync manifest declares no documents: &lt;path&gt;</code></li>
           <li><code>Sync manifest entry without an output path in &lt;path&gt;</code> or <code>Sync manifest entry &lt;output&gt; declares no sources</code></li>
           <li><code>Sync state is not valid JSON: &lt;path&gt;. Fix or delete it to re-baseline.</code> or <code>Unsupported sync state schemaVersion in &lt;path&gt;</code></li>
-          <li><code>BRAMA_URL is required: the address of the Brama gateway</code> and <code>BRAMA_API_KEY_ROLE is required: ROLE#FIELD naming the role the item holding the Brama bearer plays, and its field</code></li>
+          <li><code>BRAMA_URL is required: sync asks a model through Brama …</code> and <code>BRAMA_API_KEY_ROLE is required: ROLE#FIELD naming the role the item holding the Brama bearer plays, and its field; …</code> — each says whether the variable is unset or empty and how to set it (<a href="/docs/runbook/#environment">runbook</a>)</li>
         </ul>
         <p>A baseline that cannot be diffed yields a <code>failed</code> outcome instructing the operator to delete that state entry to re-baseline. An incomplete audit yields <code>audit did not complete: &lt;message&gt;</code>; a blocked audit whose rewrite fails yields <code>audit found blockers but the rewrite did not complete: &lt;message&gt;</code>. Git commit or push failures are process errors. See <a href="/docs/sync/">the sync loop</a> for the complete state machine.</p>
       </article>

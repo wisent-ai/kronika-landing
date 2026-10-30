@@ -47,6 +47,7 @@
         <p>Stdout is one JSON object with <code>repo</code>, <code>output</code>, <code>totalBytes</code>, a <code>sources</code> array of path and byte count, and a <code>skipped</code> array of path and reason. The command does not read Brama configuration, call Brama, or write files. Successful collection exits <code>0</code>.</p>
         <h2 id="refusals">Exact refusals</h2>
         <ul>
+          <li><code>Repository &lt;resolved-path&gt; (from --repo) cannot be used: &lt;cause&gt;</code> — nothing there, a file in the path, no permission, a link loop or a path too long; see the <a href="/docs/runbook/#startup">runbook</a></li>
           <li><code>Repository is not a directory: &lt;resolved-path&gt;</code></li>
           <li><code>Source is outside the repository: &lt;selection&gt;</code></li>
           <li><code>Source does not exist: &lt;selection&gt;</code></li>
@@ -54,7 +55,7 @@
           <li><code>Output is outside the repository: &lt;output&gt;</code></li>
           <li><code>--max-input-bytes must be a positive integer</code> or <code>--max-file-bytes must be a positive integer</code></li>
         </ul>
-        <p>Any refusal is written to stderr as <code>kronika: &lt;message&gt;</code> and exits <code>1</code>. A missing value is <code>&lt;flag&gt; requires a value</code>; an unknown option is <code>Unknown option: &lt;flag&gt;</code>.</p>
+        <p>An operational refusal is written to stderr as <code>kronika: &lt;message&gt;</code> and exits <code>1</code>. A refused command line exits <code>2</code> with the help: a missing value is <code>&lt;flag&gt; requires a value</code>, an option of another command or none is <code>sources does not accept &lt;flag&gt;</code>, each with its cause and fix.</p>
       </article>
       <nav class="page-turn" aria-label="CLI command pages"><a class="previous" href="/docs/cli/init/"><small>Previous</small><span>← kronika init</span></a><a class="next" href="/docs/cli/check/"><small>Next</small><span>kronika check →</span></a></nav>
       <footer class="docs-footer"><span>Source-grounded documentation for Kronika.</span><a href="https://github.com/wisent-ai/kronika/issues">Report an issue</a></footer>

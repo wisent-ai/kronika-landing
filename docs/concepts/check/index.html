@@ -105,9 +105,9 @@ with warnings still exits <code>0</code>.</p>
 <h2 id="refusals">Refusals</h2>
 <p>Exact sentences, captured; every one is in the <a href="/docs/runbook/">runbook</a>:</p>
 <pre><code class="language-console">$ kronika check
-kronika: check requires --base &lt;ref&gt;
+kronika: check requires --base &lt;ref&gt;: check audits the change from a base commit to --head (default HEAD), and without --base it has no change to audit; name the commit the change starts from, for example --base origin/main
 $ kronika check --base
-kronika: --base requires a value
+kronika: --base requires a value: it is the last word of the command line, so nothing follows it; write the value right after it (--base &lt;value&gt;)
 $ kronika check --base deadbeef
 kronika: Git commit cannot be resolved: deadbeef
 $ kronika check --base HEAD~1 --max-diff-bytes 1

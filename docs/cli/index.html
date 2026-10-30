@@ -220,8 +220,11 @@ but unused.</p>
 </tbody>
 </table>
 <p>Numeric flags must be positive integers
-(<code>&lt;flag&gt; must be a positive integer</code>); a value-taking flag without a value
-is <code>&lt;flag&gt; requires a value</code>.</p>
+(<code>&lt;flag&gt; must be a positive integer</code>, then whether the value is not a
+number, not whole, zero, negative or too large); a value-taking flag without a
+value is <code>&lt;flag&gt; requires a value</code>, then whether it was the last word,
+blank, or followed by another option. Each refusal ends with the fix; every
+cause is in the <a href="/docs/runbook/#flags-and-commands">runbook</a>.</p>
 <h2 id="kronika-init">kronika init</h2>
 <p>Adopts the repository's existing Markdown into schema-version-1
 <code>kronika.sync.json</code>. Default document selections are an existing
